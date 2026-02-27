@@ -6,6 +6,16 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const TOKEN_KEY = 'auth_token';
 
+// Callback to be called when token expires (set by AuthContext)
+let onTokenExpiredCallback = null;
+
+/**
+ * Set the callback for token expiration handling
+ */
+export const setTokenExpiredCallback = (callback) => {
+  onTokenExpiredCallback = callback;
+};
+
 class ApiError extends Error {
   constructor(message, status, errors = null) {
     super(message);
@@ -82,6 +92,21 @@ const request = async (endpoint, options = {}) => {
     if (!response.ok) {
       const message = data?.message || `HTTP ${response.status}`;
       const errors = data?.errors || null;
+      
+      // Handle 401 Unauthorized - token expired or invalid
+      if (response.status === 401) {
+        // Clear token and user data
+        clearToken();
+        localStorage.removeItem('current_user');
+        
+        // Notify AuthContext to update state
+        if (onTokenExpiredCallback) {
+          onTokenExpiredCallback();
+        }
+        
+        throw new ApiError('Session expirée. Veuillez vous reconnecter.', 401, errors);
+      }
+      
       throw new ApiError(message, response.status, errors);
     }
 

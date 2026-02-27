@@ -85,12 +85,14 @@ export const getUserVotes = async () => {
     return {
       success: true,
       votes: response.votes || [],
+      tournament_vote: response.tournament_vote || null,
     };
   } catch (error) {
     console.error('Get votes error:', error);
     return {
       success: false,
       votes: [],
+      tournament_vote: null,
       error: getErrorMessage(error),
     };
   }

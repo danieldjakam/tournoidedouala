@@ -243,7 +243,7 @@ const UsersRanking = ({ ranking }) => {
       <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 text-sm font-bold text-gray-600">
         <div className="col-span-2 text-center">Rang</div>
         <div className="col-span-5">Joueur</div>
-        <div className="col-span-3 text-center">Points</div>
+        <div className="col-span-3 text-center flex items-center justify-center">Points</div>
         {/* <div className="col-span-2 text-center">Votes</div> */}
       </div>
 
@@ -285,7 +285,7 @@ const UsersRanking = ({ ranking }) => {
               </div>
 
               {/* Points */}
-              <div className="col-span-3 text-center">
+              <div className="col-span-3 ">
                 <span className={`text-xl font-black ${
                   index < 3 ? 'text-[#023e78]' : 'text-gray-700'
                 }`}>

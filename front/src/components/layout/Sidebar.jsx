@@ -3,7 +3,7 @@ import {
   Calendar,
   Target,
   Trophy,
-  Star,
+  Users,
   Home,
   LogOut,
   Menu,
@@ -16,8 +16,8 @@ const menu = [
   { id: "dashboard", label: "Dashboard", icon: Home, href: "/dashboard" },
   { id: "matches", label: "Matchs", icon: Calendar, href: "/matches" },
   { id: "pronostics", label: "Pronostics", icon: Target, href: "/pronostics" },
+  { id: "vote-equipe", label: "Vote Équipe", icon: Users, href: "/vote-equipe" },
   { id: "leaderboard", label: "Classement", icon: Trophy, href: "/leaderboard" },
-  { id: "motm", label: "Vote MOTM", icon: Star, href: "/motm" },
 ];
 
 export default function Sidebar({ activeTab, setActiveTab }) {

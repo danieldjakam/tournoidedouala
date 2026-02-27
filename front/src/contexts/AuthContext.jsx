@@ -1,7 +1,7 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import * as userService from '@/api/userService';
 import { useToast } from '@/components/ui/use-toast';
-import { getToken, setToken, clearToken } from '@/lib/apiClient';
+import { getToken, setToken, clearToken, setTokenExpiredCallback } from '@/lib/apiClient';
 
 export const AuthContext = createContext(null);
 
@@ -10,32 +10,66 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
+  // Handle token expiration - called from apiClient when 401 is received
+  const handleTokenExpired = useCallback(() => {
+    setCurrentUser(null);
+    toast({
+      title: 'Session expirée',
+      description: 'Veuillez vous reconnecter',
+      variant: 'destructive',
+    });
+  }, [toast]);
+
+  // Register the callback in apiClient
+  useEffect(() => {
+    setTokenExpiredCallback(handleTokenExpired);
+  }, [handleTokenExpired]);
+
   useEffect(() => {
     const initAuth = async () => {
       const user = userService.getCurrentUser();
       const token = getToken();
-      
-      // Si on a un utilisateur mais pas de token, ou inversement, on nettoie
-      if (user && !token) {
-        clearToken();
-        userService.clearToken();
-        setCurrentUser(null);
-      } else if (token && !user) {
-        // Token présent mais pas d'utilisateur, on essaie de le récupérer
+
+      // Si on a un token mais pas d'utilisateur, on essaie de le récupérer
+      if (token && !user) {
         try {
           const result = await userService.fetchCurrentUser();
           if (result.success) {
             setCurrentUser(result.user);
           } else {
+            // Token invalide ou expiré
             clearToken();
+            setCurrentUser(null);
           }
         } catch (error) {
           clearToken();
+          setCurrentUser(null);
         }
-      } else {
-        setCurrentUser(user);
+      } 
+      // Si on a un utilisateur mais pas de token, on nettoie
+      else if (user && !token) {
+        clearToken();
+        userService.clearStoredUser();
+        setCurrentUser(null);
+      } 
+      // Si on a un token et un utilisateur, on vérifie que le token est valide
+      else if (token && user) {
+        try {
+          // Vérification silencieuse du token
+          await userService.fetchCurrentUser();
+          setCurrentUser(user);
+        } catch (error) {
+          // Token expiré ou invalide
+          clearToken();
+          userService.clearStoredUser();
+          setCurrentUser(null);
+        }
+      } 
+      // Pas de token, pas d'utilisateur
+      else {
+        setCurrentUser(null);
       }
-      
+
       setLoading(false);
     };
 

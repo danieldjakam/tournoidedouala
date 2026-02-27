@@ -3,6 +3,13 @@ import { post, get, getToken, setToken, clearToken, getErrorMessage, ApiError } 
 const CURRENT_USER_KEY = 'current_user';
 
 /**
+ * Clear stored user data
+ */
+export const clearStoredUser = () => {
+  localStorage.removeItem(CURRENT_USER_KEY);
+};
+
+/**
  * Map frontend fields to backend fields
  */
 const mapUserToBackend = (userData) => {
@@ -43,39 +50,39 @@ export const registerUser = async (userData) => {
   try {
     const backendData = mapUserToBackend(userData);
     const response = await post('/auth/register', backendData);
-    
+
     if (response.user) {
       const mappedUser = mapUserToFrontend(response.user);
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(mappedUser));
-      
+
       return {
         success: true,
         user: mappedUser,
         message: response.message,
       };
     }
-    
+
     return {
       success: false,
       error: response.message || 'Erreur lors de l\'inscription',
     };
   } catch (error) {
     console.error('Register error:', error);
-    
+
     const message = getErrorMessage(error);
-    
+
     // Handle validation errors from backend
     if (error instanceof ApiError && error.errors) {
       const fieldErrors = Object.entries(error.errors)
         .map(([field, msgs]) => `${field}: ${msgs.join(', ')}`)
         .join('\n');
-      
+
       return {
         success: false,
         error: fieldErrors,
       };
     }
-    
+
     return {
       success: false,
       error: message,
@@ -96,11 +103,11 @@ export const loginUser = async (phone, password) => {
     if (response.token && response.user) {
       // Store JWT token
       setToken(response.token);
-      
+
       // Map and store user
       const mappedUser = mapUserToFrontend(response.user);
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(mappedUser));
-      
+
       return {
         success: true,
         user: mappedUser,
@@ -115,17 +122,20 @@ export const loginUser = async (phone, password) => {
     };
   } catch (error) {
     console.error('Login error:', error);
-    
+
     const message = getErrorMessage(error);
-    
+
     // Status 401 = invalid credentials
     if (error instanceof ApiError && error.status === 401) {
+      // Clear any stale data
+      clearToken();
+      clearStoredUser();
       return {
         success: false,
         error: 'Numéro de téléphone ou mot de passe incorrect',
       };
     }
-    
+
     return {
       success: false,
       error: message,
@@ -147,7 +157,7 @@ export const logoutUser = async () => {
   } finally {
     // Always clear local state
     clearToken();
-    localStorage.removeItem(CURRENT_USER_KEY);
+    clearStoredUser();
   }
 };
 
@@ -171,7 +181,7 @@ export const getCurrentUser = () => {
 export const refreshToken = async () => {
   try {
     const response = await post('/auth/refresh', {});
-    
+
     if (response.token) {
       setToken(response.token);
       return {
@@ -179,7 +189,7 @@ export const refreshToken = async () => {
         token: response.token,
       };
     }
-    
+
     return {
       success: false,
       error: 'Impossible de rafraîchir le token',
@@ -187,8 +197,8 @@ export const refreshToken = async () => {
   } catch (error) {
     console.error('Token refresh error:', error);
     clearToken();
-    localStorage.removeItem(CURRENT_USER_KEY);
-    
+    clearStoredUser();
+
     return {
       success: false,
       error: getErrorMessage(error),
@@ -202,7 +212,7 @@ export const refreshToken = async () => {
 export const fetchCurrentUser = async () => {
   try {
     const user = await get('/auth/me');
-    
+
     if (user) {
       const mappedUser = mapUserToFrontend(user);
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(mappedUser));
@@ -211,20 +221,20 @@ export const fetchCurrentUser = async () => {
         user: mappedUser,
       };
     }
-    
+
     return {
       success: false,
       error: 'Impossible de charger les données utilisateur',
     };
   } catch (error) {
     console.error('Fetch user error:', error);
-    
+
     // If 401, token is invalid
     if (error instanceof ApiError && error.status === 401) {
       clearToken();
-      localStorage.removeItem(CURRENT_USER_KEY);
+      clearStoredUser();
     }
-    
+
     return {
       success: false,
       error: getErrorMessage(error),

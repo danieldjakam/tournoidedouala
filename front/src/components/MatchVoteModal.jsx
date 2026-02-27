@@ -1,14 +1,44 @@
-import { useState } from 'react';
-import { X, Trophy } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Trophy, Lock, Star } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import * as voteService from '@/api/voteService';
+import * as matchService from '@/api/matchService';
+import { Loader } from 'lucide-react';
 
 export default function MatchVoteModal({ match, isOpen, onClose, onVoteSuccess }) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [teamPlayers, setTeamPlayers] = useState([]);
+
+  useEffect(() => {
+    // Load players from both teams when modal opens
+    const loadPlayers = async () => {
+      if (!match) return;
+      
+      try {
+        const [team1Players, team2Players] = await Promise.all([
+          matchService.getTeamPlayers(match.team_1_id),
+          matchService.getTeamPlayers(match.team_2_id),
+        ]);
+        
+        const allPlayers = [
+          ...(team1Players.players || []),
+          ...(team2Players.players || []),
+        ];
+        setTeamPlayers(allPlayers);
+      } catch (error) {
+        console.error('Error loading players:', error);
+      }
+    };
+    
+    loadPlayers();
+  }, [match]);
 
   if (!isOpen || !match) return null;
+
+  const isLocked = new Date(match.date_match) <= new Date();
 
   const handleVoteSubmit = async () => {
     if (!selectedTeam) {
@@ -20,22 +50,34 @@ export default function MatchVoteModal({ match, isOpen, onClose, onVoteSuccess }
       return;
     }
 
+    if (isLocked) {
+      toast({
+        title: 'Vote fermé',
+        description: 'Ce match a déjà commencé',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       const result = await voteService.voteMatch(
         match.id,
         selectedTeam,
-        null // Plus de vote MOTM
+        selectedPlayer?.id || null
       );
 
       if (result.success) {
         toast({
           title: 'Pronostic enregistré',
-          description: 'Votre vote a été validé avec succès',
+          description: selectedPlayer 
+            ? 'Votre vote pour l\'équipe et l\'homme du match a été validé'
+            : 'Votre vote a été validé avec succès',
         });
         onVoteSuccess(result.vote);
         onClose();
         setSelectedTeam(null);
+        setSelectedPlayer(null);
       } else {
         toast({
           title: 'Erreur',
@@ -47,7 +89,7 @@ export default function MatchVoteModal({ match, isOpen, onClose, onVoteSuccess }
       console.error('Vote error:', error);
       toast({
         title: 'Erreur',
-        description: 'Une erreur est survenue',
+        description: error.status === 401 ? 'Session expirée. Veuillez vous reconnecter.' : 'Une erreur est survenue',
         variant: 'destructive',
       });
     } finally {
@@ -160,6 +202,41 @@ export default function MatchVoteModal({ match, isOpen, onClose, onVoteSuccess }
                 </div>
               </button>
             </div>
+          </div>
+
+          {/* Man of the Match Selection */}
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Star size={20} className="text-[#f71a18]" />
+              Homme du match (optionnel)
+            </h3>
+            <select
+              value={selectedPlayer?.id || ''}
+              onChange={(e) => {
+                const player = teamPlayers.find(p => p.id === parseInt(e.target.value));
+                setSelectedPlayer(player || null);
+              }}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-700 font-medium focus:border-[#023e78] focus:outline-none bg-white"
+            >
+              <option value="">-- Sélectionner un joueur (optionnel) --</option>
+              {teamPlayers.map((player) => (
+                <option key={player.id} value={player.id}>
+                  {player.prenom} {player.nom} - {
+                    player.team_id === match.team_1_id ? match.team1?.nom : match.team2?.nom
+                  }
+                </option>
+              ))}
+            </select>
+            {selectedPlayer && (
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
+                <Star size={18} className="text-[#f71a18]" />
+                <span className="text-sm font-medium text-red-900">
+                  {selectedPlayer.prenom} {selectedPlayer.nom} ({
+                    selectedPlayer.team_id === match.team_1_id ? match.team1?.nom : match.team2?.nom
+                  })
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Actions */}

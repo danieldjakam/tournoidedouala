@@ -19,6 +19,16 @@ class Team extends Model
         'priorite',
     ];
 
+    protected $appends = ['logo_url'];
+
+    /**
+     * Get the logo URL attribute.
+     */
+    public function getLogoUrlAttribute(): string
+    {
+        return $this->logo ?? 'https://via.placeholder.com/48';
+    }
+
     /**
      * Get all players on this team.
      */

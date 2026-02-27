@@ -16,7 +16,7 @@ import MatchsPage from './pages/MatchsPage';
 import MatchDetailPage from './pages/MatchDetailPage';
 import PronosticPage from './pages/PronosticPage';
 import LeaderboardPage from './pages/LeaderboardPage';
-import MotmPage from './pages/MotmPage';
+import VoteEquipePage from './pages/VoteEquipePage';
 
 function App() {
   return (
@@ -76,10 +76,10 @@ function App() {
             />
 
             <Route
-              path="/motm"
+              path="/vote-equipe"
               element={
                 <ProtectedRoute>
-                  <MotmPage />
+                  <VoteEquipePage />
                 </ProtectedRoute>
               }
             />

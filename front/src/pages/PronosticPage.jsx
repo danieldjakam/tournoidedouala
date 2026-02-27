@@ -34,7 +34,7 @@ const PronosticPage = () => {
     const loadVotes = async () => {
       // Wait for auth to be initialized
       if (loading) return;
-      
+
       // Check if user is authenticated with valid token
       const token = getToken();
       if (!currentUser || !token) {
@@ -49,6 +49,11 @@ const PronosticPage = () => {
         if (result.success) {
           setUserVotes(result.votes || []);
         } else {
+          // Don't show error toast for 401 - let the AuthContext handle it
+          if (result.error?.includes('Session expirée') || result.error?.includes('401')) {
+            return;
+          }
+          
           toast({
             title: 'Erreur',
             description: 'Impossible de charger vos pronostics',
@@ -57,20 +62,16 @@ const PronosticPage = () => {
         }
       } catch (error) {
         console.error('Error loading votes:', error);
-        // Handle 401 - token expired
+        // Handle 401 - token expired (AuthContext already handles this)
         if (error.status === 401) {
-          toast({
-            title: 'Session expirée',
-            description: 'Veuillez vous reconnecter',
-            variant: 'destructive',
-          });
-        } else {
-          toast({
-            title: 'Erreur',
-            description: 'Une erreur est survenue',
-            variant: 'destructive',
-          });
+          return;
         }
+        
+        toast({
+          title: 'Erreur',
+          description: 'Une erreur est survenue',
+          variant: 'destructive',
+        });
       } finally {
         setIsLoading(false);
       }
