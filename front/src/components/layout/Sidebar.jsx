@@ -20,11 +20,15 @@ const menu = [
   { id: "leaderboard", label: "Classement", icon: Trophy, href: "/leaderboard" },
 ];
 
-export default function Sidebar({ activeTab, setActiveTab }) {
+export default function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Use external state if provided, otherwise use internal state
+  const isOpen = isMobileMenuOpen !== undefined ? isMobileMenuOpen : internalIsOpen;
+  const setIsOpen = setIsMobileMenuOpen !== undefined ? setIsMobileMenuOpen : setInternalIsOpen;
 
   const handleNavigation = (item) => {
     setActiveTab(item.id);

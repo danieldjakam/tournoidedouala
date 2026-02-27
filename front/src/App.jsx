@@ -9,6 +9,7 @@ import RegisterPage from '@/pages/RegisterPage';
 import LoginPage from '@/pages/LoginPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import UserProfilePage from '@/pages/UserProfilePage';
+import UserSettingsPage from '@/pages/UserSettingsPage';
 import UserDashboardPage from '@/pages/UserDashboardPage';
 import AdminLoginPage from '@/pages/AdminLoginPage';
 import AdminDashboardPage from '@/pages/AdminDashboardPage';
@@ -89,6 +90,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <UserProfilePage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <UserSettingsPage />
                 </ProtectedRoute>
               }
             />

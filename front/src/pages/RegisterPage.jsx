@@ -54,7 +54,7 @@ const registerSchema = yup.object().shape({
   
   gender: yup
     .string()
-    .required('Le sexe est requis')
+    .required('Le genre est requis')
     .oneOf(['homme', 'femme'], 'Valeur invalide'),
   
   password: yup
@@ -537,7 +537,7 @@ const RegisterPage = () => {
                 
                 <div>
                   <label className="block text-gray-700 font-medium mb-1 text-sm">
-                    Sexe <span className="text-red-500">*</span>
+                    Genre <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="gender"

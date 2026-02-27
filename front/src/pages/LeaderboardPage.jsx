@@ -113,9 +113,9 @@ const LeaderboardPage = () => {
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {/* Contenu principal */}
-        <main className="flex-1 md:ml-72 p-6 lg:p-8 transition-all duration-300">
+        <main className="flex-1 md:ml-72 p-4 sm:p-6 lg:p-8 transition-all duration-300">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
               <Trophy size={14} />
               <ChevronRight size={12} />
@@ -124,14 +124,14 @@ const LeaderboardPage = () => {
 
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#023e78] to-[#0356a8] rounded-xl shadow-lg flex items-center justify-center">
-                  <Trophy size={24} className="text-white" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#023e78] to-[#0356a8] rounded-xl shadow-lg flex items-center justify-center">
+                  <Trophy size={20} className="text-white sm:block" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-[#023e78]">
+                  <h1 className="text-xl sm:text-2xl font-bold text-[#023e78]">
                     Classements
                   </h1>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs sm:text-sm text-gray-500">
                     Suivez les meilleurs pronostiqueurs et équipes
                   </p>
                 </div>
@@ -140,27 +140,27 @@ const LeaderboardPage = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-3 mb-8">
+          <div className="flex gap-3 mb-6 sm:mb-8">
             <button
               onClick={() => setLeaderboardType('users')}
-              className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 ${
+              className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base ${
                 leaderboardType === 'users'
                   ? 'bg-gradient-to-r from-[#023e78] to-[#0356a8] text-white shadow-lg'
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               }`}
             >
-              <Users size={20} />
+              <Users size={18} className="sm:block" />
               <span>Pronostiqueurs</span>
             </button>
             <button
               onClick={() => setLeaderboardType('teams')}
-              className={`flex-1 px-6 py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-3 ${
+              className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base ${
                 leaderboardType === 'teams'
                   ? 'bg-gradient-to-r from-[#023e78] to-[#0356a8] text-white shadow-lg'
                   : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
               }`}
             >
-              <TrendingUp size={20} />
+              <TrendingUp size={18} className="sm:block" />
               <span>Équipes</span>
             </button>
           </div>
@@ -182,23 +182,6 @@ const LeaderboardPage = () => {
           )}
         </main>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 };
@@ -254,44 +237,44 @@ const UsersRanking = ({ ranking }) => {
           return (
             <div
               key={user.id}
-              className={`grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition-colors ${
+              className={`grid grid-cols-12 gap-2 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 items-center hover:bg-gray-50 transition-colors ${
                 badge ? 'bg-gradient-to-r from-yellow-50/50 to-transparent' : ''
               }`}
             >
               {/* Rang */}
               <div className="col-span-2 text-center">
                 {badge ? (
-                  <span className="text-2xl">{badge.icon}</span>
+                  <span className="text-xl sm:text-2xl">{badge.icon}</span>
                 ) : (
-                  <span className="text-lg font-bold text-gray-500">#{index + 1}</span>
+                  <span className="text-base sm:text-lg font-bold text-gray-500">#{index + 1}</span>
                 )}
               </div>
 
               {/* Joueur */}
               <div className="col-span-7">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-white text-xs sm:text-base ${
                     badge ? badge.bg : 'bg-gray-300'
                   }`}>
                     {user.prenom?.charAt(0) || user.nom?.charAt(0) || '?'}
                   </div>
-                  <div>
-                    <p className="font-bold text-gray-900">
+                  <div className="min-w-0">
+                    <p className="font-bold text-gray-900 text-xs sm:text-sm truncate">
                       {user.prenom} {user.nom}
                     </p>
-                    <p className="text-xs text-gray-500">{user.telephone}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">{user.telephone}</p>
                   </div>
                 </div>
               </div>
 
               {/* Points */}
-              <div className="col-span-3 ">
-                <span className={`text-xl font-black ${
+              <div className="col-span-3 text-right sm:text-center">
+                <span className={`text-base sm:text-xl font-black ${
                   index < 3 ? 'text-[#023e78]' : 'text-gray-700'
                 }`}>
                   {user.points || 0}
                 </span>
-                <p className="text-xs text-gray-500">pts</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">pts</p>
               </div>
 
               {/* Votes */}
@@ -359,44 +342,44 @@ const TeamsRanking = ({ ranking }) => {
           return (
             <div
               key={team.id}
-              className={`grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 transition-colors ${
+              className={`grid grid-cols-12 gap-2 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 items-center hover:bg-gray-50 transition-colors ${
                 badge ? 'bg-gradient-to-r from-yellow-50/50 to-transparent' : ''
               }`}
             >
               {/* Rang */}
               <div className="col-span-2 text-center">
                 {badge ? (
-                  <span className="text-2xl">{badge.icon}</span>
+                  <span className="text-xl sm:text-2xl">{badge.icon}</span>
                 ) : (
-                  <span className="text-lg font-bold text-gray-500">#{index + 1}</span>
+                  <span className="text-base sm:text-lg font-bold text-gray-500">#{index + 1}</span>
                 )}
               </div>
 
               {/* Équipe */}
               <div className="col-span-7">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-50 rounded-full p-2 flex items-center justify-center">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gray-50 rounded-full p-1 sm:p-2 flex items-center justify-center flex-shrink-0">
                     <img
                       src={team.logo || team.logo_url || 'https://via.placeholder.com/48'}
                       alt={team.nom}
                       className="w-full h-full object-contain"
                     />
                   </div>
-                  <div>
-                    <p className="font-bold text-gray-900">{team.nom}</p>
-                    <p className="text-xs text-gray-500">{team.code}</p>
+                  <div className="min-w-0">
+                    <p className="font-bold text-gray-900 text-xs sm:text-sm truncate">{team.nom}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500">{team.code}</p>
                   </div>
                 </div>
               </div>
 
               {/* Points */}
-              <div className="col-span-3 text-center">
-                <span className={`text-xl font-black ${
+              <div className="col-span-3 text-right sm:text-center">
+                <span className={`text-base sm:text-xl font-black ${
                   index < 3 ? 'text-[#023e78]' : 'text-gray-700'
                 }`}>
                   {team.total_points || team.points || 0}
                 </span>
-                <p className="text-xs text-gray-500">pts</p>
+                <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">pts</p>
               </div>
 
               {/* Priorité */}
