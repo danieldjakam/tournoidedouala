@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\SportMatch;
+use App\Models\VoteMatch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,12 +15,22 @@ class MatchController
     public function index(Request $request): JsonResponse
     {
         $query = SportMatch::query()
-            ->with(['team1', 'team2', 'votes'])
+            ->with(['team1', 'team2'])
             ->orderBy('date_match', 'asc');
 
-        // Filter by status
+        // Filter by status (support both frontend and backend status names)
         if ($request->has('statut')) {
-            $query->where('statut', $request->statut);
+            $status = $request->statut;
+            // Map frontend status to backend status
+            $statusMap = [
+                'planifie' => 'planifie',
+                'upcoming' => 'planifie',
+                'en_cours' => 'en_cours',
+                'live' => 'en_cours',
+                'termine' => 'termine',
+                'finished' => 'termine',
+            ];
+            $query->where('statut', $statusMap[$status] ?? $status);
         }
 
         // Filter by date range
@@ -92,5 +103,23 @@ class MatchController
             ->paginate(20);
 
         return response()->json($history);
+    }
+
+    /**
+     * Get user's vote for a specific match
+     */
+    public function getUserVote(SportMatch $match): JsonResponse
+    {
+        $userId = auth('api')->id();
+
+        $vote = VoteMatch::where('user_id', $userId)
+            ->where('match_id', $match->id)
+            ->with(['teamVote', 'playerVote'])
+            ->first();
+
+        return response()->json([
+            'vote' => $vote,
+            'has_voted' => $vote !== null,
+        ]);
     }
 }

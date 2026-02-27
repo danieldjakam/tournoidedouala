@@ -13,6 +13,7 @@ import UserDashboardPage from '@/pages/UserDashboardPage';
 import AdminLoginPage from '@/pages/AdminLoginPage';
 import AdminDashboardPage from '@/pages/AdminDashboardPage';
 import MatchsPage from './pages/MatchsPage';
+import MatchDetailPage from './pages/MatchDetailPage';
 import PronosticPage from './pages/PronosticPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import MotmPage from './pages/MotmPage';
@@ -28,7 +29,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            
+
             <Route
               path="/dashboard"
               element={
@@ -43,6 +44,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MatchsPage />
+                </ProtectedRoute>
+              }
+            />
+
+             <Route
+              path="/matches/:matchId"
+              element={
+                <ProtectedRoute>
+                  <MatchDetailPage />
                 </ProtectedRoute>
               }
             />
@@ -82,7 +92,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            
+
             <Route path="/admin/login" element={<AdminLoginPage />} />
             <Route
               path="/admin/dashboard"

@@ -9,6 +9,8 @@ import {
   Clock,
   Trophy,
   Lock,
+  ChevronRight as ChevronRightIcon,
+  CheckCircle,
 } from 'lucide-react';
 import Sidebar from '../components/layout/Sidebar';
 import MatchVoteModal from '../components/MatchVoteModal';
@@ -26,6 +28,8 @@ const MatchsPage = () => {
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [isVoteModalOpen, setIsVoteModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [votedMatchIds, setVotedMatchIds] = useState(new Set());
+  const navigate = useNavigate();
 
   // Load matches and teams
   useEffect(() => {
@@ -33,12 +37,29 @@ const MatchsPage = () => {
       try {
         setIsLoading(true);
 
-        // Load matches
-        const filters = statusFilter !== 'all' ? { status: statusFilter } : {};
-        const matchesResult = await matchService.getUpcomingMatches();
+        // Load matches based on filter
+        let matchesResult;
+        if (statusFilter === 'all') {
+          matchesResult = await matchService.getMatches({});
+        } else if (statusFilter === 'planifie') {
+          matchesResult = await matchService.getUpcomingMatches();
+        } else if (statusFilter === 'en_cours') {
+          matchesResult = await matchService.getLiveMatches();
+        } else if (statusFilter === 'termine') {
+          matchesResult = await matchService.getFinishedMatches();
+        } else {
+          matchesResult = await matchService.getMatches({ status: statusFilter });
+        }
 
         if (matchesResult.success) {
-          setMatches(matchesResult.matches);
+          const matches = matchesResult.matches || [];
+          setMatches(matches);
+
+          // Load user votes for these matches if logged in
+          if (currentUser && matches.length > 0) {
+            const votedIds = await loadUserVotes(matches);
+            setVotedMatchIds(votedIds);
+          }
         } else {
           toast({
             title: 'Erreur',
@@ -65,9 +86,40 @@ const MatchsPage = () => {
     };
 
     loadData();
-  }, [statusFilter, toast]);
+  }, [statusFilter, toast, currentUser]);
 
-  const handleVoteClick = (match) => {
+  // Load user votes for a list of matches
+  const loadUserVotes = async (matches) => {
+    const votedIds = new Set();
+    
+    try {
+      // Check votes for all matches in parallel
+      const votePromises = matches.map(async (match) => {
+        try {
+          const result = await matchService.getMyVoteForMatch(match.id);
+          if (result.success && result.hasVoted) {
+            votedIds.add(match.id);
+          }
+        } catch (error) {
+          console.error(`Error checking vote for match ${match.id}:`, error);
+        }
+      });
+
+      await Promise.all(votePromises);
+    } catch (error) {
+      console.error('Error loading user votes:', error);
+    }
+
+    return votedIds;
+  };
+
+  const handleMatchClick = (match) => {
+    navigate(`/matches/${match.id}`);
+  };
+
+  const handleVoteClick = (match, e) => {
+    e.stopPropagation(); // Prevent triggering the card click
+
     if (!currentUser) {
       toast({
         title: 'Authentification requise',
@@ -77,10 +129,10 @@ const MatchsPage = () => {
       return;
     }
 
-    if (matchService.isMatchPronosticLocked(match)) {
+    if (!matchService.canUserVote(match, false)) {
       toast({
-        title: 'Match verrouillé',
-        description: 'Ce match a déjà commencé, impossible de voter',
+        title: 'Vote fermé',
+        description: 'Les votes sont fermés pour ce match',
         variant: 'destructive',
       });
       return;
@@ -95,6 +147,8 @@ const MatchsPage = () => {
       title: 'Succès',
       description: 'Votre pronostic a été enregistré',
     });
+    // Add this match to voted IDs
+    setVotedMatchIds(prev => new Set(prev).add(vote.match_id));
   };
 
   const formatDate = (dateString) => {
@@ -104,6 +158,15 @@ const MatchsPage = () => {
       hour: '2-digit',
       minute: '2-digit',
     }).format(new Date(dateString));
+  };
+
+  const getStatusBadge = (statut) => {
+    const badges = {
+      planifie: { label: 'À venir', color: 'bg-blue-100 text-blue-800' },
+      en_cours: { label: 'En cours', color: 'bg-yellow-100 text-yellow-800' },
+      termine: { label: 'Terminé', color: 'bg-green-100 text-green-800' },
+    };
+    return badges[statut] || { label: statut, color: 'bg-gray-100 text-gray-800' };
   };
 
   if (!currentUser) return null;
@@ -134,10 +197,9 @@ const MatchsPage = () => {
                   <Calendar size={24} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-[#023e78]">Matchs à venir</h1>
+                  <h1 className="text-2xl font-bold text-[#023e78]">Tous les matchs</h1>
                   <p className="text-sm text-gray-500">
-                    {matches.length} match{matches.length > 1 ? 's' : ''} programmé
-                    {matches.length > 1 ? 's' : ''}
+                    {matches.length} match{matches.length > 1 ? 's' : ''}
                   </p>
                 </div>
               </div>
@@ -148,11 +210,12 @@ const MatchsPage = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 transition"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-400 transition bg-white"
                 >
                   <option value="all">Tous</option>
-                  <option value="upcoming">À venir</option>
-                  <option value="finished">Terminés</option>
+                  <option value="planifie">À venir</option>
+                  <option value="en_cours">En cours</option>
+                  <option value="termine">Terminés</option>
                 </select>
               </div>
             </div>
@@ -180,38 +243,43 @@ const MatchsPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fadeIn">
               {matches.map((match) => {
                 const isLocked = matchService.isMatchPronosticLocked(match);
+                const statusBadge = getStatusBadge(match.statut);
+                const hasVoted = votedMatchIds.has(match.id);
 
                 return (
                   <div
                     key={match.id}
-                    className={`bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden transition-all hover:shadow-xl ${
-                      isLocked ? 'opacity-75' : ''
+                    onClick={() => handleMatchClick(match)}
+                    className={`bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden transition-all hover:shadow-xl cursor-pointer relative ${
+                      hasVoted ? 'ring-2 ring-green-500' : ''
+                    } ${
+                      isLocked ? 'opacity-90' : ''
                     }`}
                   >
+                    {/* Voted Badge */}
+                    {hasVoted && (
+                      <div className="absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 z-10">
+                        <CheckCircle size={14} />
+                        Déjà voté
+                      </div>
+                    )}
+
                     {/* Header */}
                     <div className="bg-gradient-to-r from-[#023e78]/10 to-[#f71a18]/10 p-4 border-b border-gray-100">
-                      <div className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2 text-gray-600">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
                           <Clock size={16} />
                           <span className="font-medium">{formatDate(match.date_match)}</span>
                         </div>
-                        {isLocked && (
-                          <div className="flex items-center gap-1 text-[#f71a18] font-bold">
-                            <Lock size={16} />
-                            Verrouillé
-                          </div>
-                        )}
-                        {match.statut === 'finished' && (
-                          <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">
-                            Terminé
-                          </span>
-                        )}
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${statusBadge.color}`}>
+                          {statusBadge.label}
+                        </span>
                       </div>
                     </div>
 
                     {/* Match Content */}
                     <div className="p-6">
-                      <div className="grid grid-cols-3 gap-4 items-center mb-6">
+                      <div className="grid grid-cols-3 gap-4 items-center mb-4">
                         {/* Team 1 */}
                         <div className="text-center">
                           <div className="w-16 h-16 mx-auto mb-3 bg-gray-50 rounded-full p-2 flex items-center justify-center">
@@ -226,13 +294,14 @@ const MatchsPage = () => {
                           </p>
                         </div>
 
-                        {/* VS */}
+                        {/* VS / Score */}
                         <div className="text-center">
-                          <div className="text-2xl font-black text-gray-300 mb-2">VS</div>
-                          {match.statut === 'finished' && (
-                            <div className="text-xs text-gray-500 font-medium">
+                          {match.statut === 'termine' ? (
+                            <div className="text-xl font-black text-gray-900">
                               {match.score_team_1} - {match.score_team_2}
                             </div>
+                          ) : (
+                            <div className="text-2xl font-black text-gray-300 mb-2">VS</div>
                           )}
                         </div>
 
@@ -251,16 +320,43 @@ const MatchsPage = () => {
                         </div>
                       </div>
 
-                      {/* Vote Button */}
-                      {!isLocked && currentUser && (
+                      {/* Action Buttons */}
+                      <div className="flex items-center justify-between gap-3 mt-4 pt-4 border-t border-gray-100">
                         <button
-                          onClick={() => handleVoteClick(match)}
-                          className="w-full px-4 py-3 bg-gradient-to-r from-[#023e78] to-[#0356a8] hover:from-[#0356a8] hover:to-[#023e78] text-white rounded-lg font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMatchClick(match);
+                          }}
+                          className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition flex items-center justify-center gap-2"
                         >
-                          <Trophy size={18} />
-                          Faire un pronostic
+                          <span>Détails</span>
+                          <ChevronRightIcon size={16} />
                         </button>
-                      )}
+
+                        {match.statut === 'planifie' && (
+                          <button
+                            onClick={(e) => handleVoteClick(match, e)}
+                            disabled={hasVoted}
+                            className={`flex-1 px-4 py-2 rounded-lg font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 ${
+                              hasVoted
+                                ? 'bg-green-100 text-green-700 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-[#023e78] to-[#0356a8] hover:from-[#0356a8] hover:to-[#023e78] text-white'
+                            }`}
+                          >
+                            {hasVoted ? (
+                              <>
+                                <CheckCircle size={16} />
+                                Voté
+                              </>
+                            ) : (
+                              <>
+                                <Trophy size={16} />
+                                Voter
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );

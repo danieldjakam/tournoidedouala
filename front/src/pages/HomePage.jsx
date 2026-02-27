@@ -225,10 +225,22 @@ const HomePage = () => {
   const teamsInView = useFramerInView(teamsRef, { once: true, amount: 0.1 });
 
   useEffect(() => {
-    // Chargement immédiat des équipes sans délai artificiel
-    const teamsData = matchService.getTeams();
-    setTeams(teamsData || []);
-    setIsLoading(false);
+    // Chargement des équipes
+    const loadTeams = async () => {
+      try {
+        const teamsResult = await matchService.getTeams();
+        if (teamsResult.success) {
+          setTeams(teamsResult.teams || []);
+        }
+      } catch (error) {
+        console.error('Error loading teams:', error);
+        setTeams([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTeams();
   }, []);
 
   const stats = [{

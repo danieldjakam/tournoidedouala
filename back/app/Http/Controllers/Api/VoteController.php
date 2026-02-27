@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Match;
 use App\Models\VoteMatch;
 use App\Models\VoteTournament;
 use App\Models\PointSystem;
@@ -14,6 +13,7 @@ class VoteController
 {
     /**
      * Vote for match winner and man of the match
+     * Once voted, user cannot modify or delete their vote
      */
     public function voteMatch(Request $request): JsonResponse
     {
@@ -24,7 +24,20 @@ class VoteController
                 'player_vote_id' => 'nullable|exists:players,id',
             ]);
 
+            $userId = auth('api')->id();
             $match = \App\Models\SportMatch::findOrFail($validated['match_id']);
+
+            // Check if user has already voted for this match
+            $existingVote = VoteMatch::where('user_id', $userId)
+                ->where('match_id', $match->id)
+                ->first();
+
+            if ($existingVote) {
+                return response()->json([
+                    'message' => 'Vous avez déjà voté pour ce match. Votre pronostic ne peut plus être modifié.',
+                    'vote' => $existingVote->load(['teamVote', 'playerVote']),
+                ], 409); // Conflict
+            }
 
             // Check match hasn't started
             if ($match->date_match <= now()) {
@@ -33,14 +46,13 @@ class VoteController
                 ], 422);
             }
 
-            // Upsert vote (replace if already voted)
-            $vote = VoteMatch::updateOrCreate(
-                ['user_id' => auth('api')->id(), 'match_id' => $validated['match_id']],
-                [
-                    'team_vote_id' => $validated['team_vote_id'],
-                    'player_vote_id' => $validated['player_vote_id'],
-                ]
-            );
+            // Create new vote
+            $vote = VoteMatch::create([
+                'user_id' => $userId,
+                'match_id' => $validated['match_id'],
+                'team_vote_id' => $validated['team_vote_id'],
+                'player_vote_id' => $validated['player_vote_id'],
+            ]);
 
             return response()->json([
                 'message' => 'Vote registered successfully',

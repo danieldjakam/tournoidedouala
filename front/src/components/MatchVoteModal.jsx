@@ -1,51 +1,12 @@
-import { useState, useEffect } from 'react';
-import { X, Trophy, User, Loader } from 'lucide-react';
+import { useState } from 'react';
+import { X, Trophy } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import * as voteService from '@/api/voteService';
-import * as matchService from '@/api/matchService';
 
 export default function MatchVoteModal({ match, isOpen, onClose, onVoteSuccess }) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [teamPlayers, setTeamPlayers] = useState({});
-  const [isLoadingPlayers, setIsLoadingPlayers] = useState(false);
-
-  // Load players when modal opens or and team is selected
-  useEffect(() => {
-    if (!isOpen || !match) return;
-
-    const loadPlayers = async () => {
-      try {
-        setIsLoadingPlayers(true);
-
-        // Get team 1 players
-        const team1Result = await matchService.getTeamPlayers(match.team_1_id, match.id);
-        if (team1Result.success) {
-          setTeamPlayers((prev) => ({
-            ...prev,
-            [match.team_1_id]: team1Result.players,
-          }));
-        }
-
-        // Get team 2 players
-        const team2Result = await matchService.getTeamPlayers(match.team_2_id, match.id);
-        if (team2Result.success) {
-          setTeamPlayers((prev) => ({
-            ...prev,
-            [match.team_2_id]: team2Result.players,
-          }));
-        }
-      } catch (error) {
-        console.error('Error loading players:', error);
-      } finally {
-        setIsLoadingPlayers(false);
-      }
-    };
-
-    loadPlayers();
-  }, [isOpen, match]);
 
   if (!isOpen || !match) return null;
 
@@ -64,7 +25,7 @@ export default function MatchVoteModal({ match, isOpen, onClose, onVoteSuccess }
       const result = await voteService.voteMatch(
         match.id,
         selectedTeam,
-        selectedPlayer || null
+        null // Plus de vote MOTM
       );
 
       if (result.success) {
@@ -75,7 +36,6 @@ export default function MatchVoteModal({ match, isOpen, onClose, onVoteSuccess }
         onVoteSuccess(result.vote);
         onClose();
         setSelectedTeam(null);
-        setSelectedPlayer(null);
       } else {
         toast({
           title: 'Erreur',
@@ -104,8 +64,6 @@ export default function MatchVoteModal({ match, isOpen, onClose, onVoteSuccess }
       minute: '2-digit',
     }).format(date);
   };
-
-  const selectedTeamPlayers = selectedTeam ? (teamPlayers[selectedTeam] || []) : [];
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -203,48 +161,6 @@ export default function MatchVoteModal({ match, isOpen, onClose, onVoteSuccess }
               </button>
             </div>
           </div>
-
-          {/* Player Selection (Optional) */}
-          {selectedTeam && selectedTeamPlayers.length > 0 && (
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <User size={20} className="text-[#023e78]" />
-                Homme du match (Optionnel)
-              </h3>
-
-              {isLoadingPlayers ? (
-                <div className="flex justify-center py-4">
-                  <Loader size={20} className="animate-spin text-[#023e78]" />
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {selectedTeamPlayers.map((player) => (
-                    <button
-                      key={player.id}
-                      onClick={() => setSelectedPlayer(player.id)}
-                      className={`w-full p-3 rounded-lg text-left transition-all border-2 ${
-                        selectedPlayer === player.id
-                          ? 'border-[#023e78] bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-bold text-gray-900">
-                            {player.prenom} {player.nom}
-                          </div>
-                          <div className="text-xs text-gray-500">{player.poste}</div>
-                        </div>
-                        {selectedPlayer === player.id && (
-                          <div className="text-[#023e78] font-bold">✓</div>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Actions */}
           <div className="flex gap-4 pt-4 border-t border-gray-200">

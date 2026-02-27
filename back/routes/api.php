@@ -28,13 +28,12 @@ Route::prefix('teams')->group(function () {
     Route::get('/{team}/players', [TeamController::class, 'getPlayers']);
 });
 
-Route::prefix('rankings')->group(function () {
-    Route::get('users', [RankingController::class, 'users']);
-    Route::get('teams', [RankingController::class, 'teams']);
-});
-
 // Protected routes (requires auth:api)
 Route::middleware('auth:api')->group(function () {
+    Route::prefix('matches/{match}')->group(function () {
+        Route::get('/my-vote', [MatchController::class, 'getUserVote']);
+    });
+
     Route::prefix('votes')->group(function () {
         Route::post('match', [VoteController::class, 'voteMatch']);
         Route::post('tournament', [VoteController::class, 'voteTournament']);
@@ -44,5 +43,11 @@ Route::middleware('auth:api')->group(function () {
     Route::prefix('rankings')->group(function () {
         Route::get('my-rank', [RankingController::class, 'myRank']);
     });
+});
+
+// Public rankings (must be after protected rankings to avoid conflicts)
+Route::prefix('rankings')->group(function () {
+    Route::get('users', [RankingController::class, 'users']);
+    Route::get('teams', [RankingController::class, 'teams']);
 });
 

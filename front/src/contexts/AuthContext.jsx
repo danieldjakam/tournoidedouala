@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import * as userService from '@/api/userService';
 import { useToast } from '@/components/ui/use-toast';
+import { getToken, setToken, clearToken } from '@/lib/apiClient';
 
 export const AuthContext = createContext(null);
 
@@ -10,9 +11,35 @@ export const AuthProvider = ({ children }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const user = userService.getCurrentUser();
-    setCurrentUser(user);
-    setLoading(false);
+    const initAuth = async () => {
+      const user = userService.getCurrentUser();
+      const token = getToken();
+      
+      // Si on a un utilisateur mais pas de token, ou inversement, on nettoie
+      if (user && !token) {
+        clearToken();
+        userService.clearToken();
+        setCurrentUser(null);
+      } else if (token && !user) {
+        // Token présent mais pas d'utilisateur, on essaie de le récupérer
+        try {
+          const result = await userService.fetchCurrentUser();
+          if (result.success) {
+            setCurrentUser(result.user);
+          } else {
+            clearToken();
+          }
+        } catch (error) {
+          clearToken();
+        }
+      } else {
+        setCurrentUser(user);
+      }
+      
+      setLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const login = async (phone, password) => {
