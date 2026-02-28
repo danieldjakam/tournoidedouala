@@ -59,9 +59,9 @@ const registerSchema = yup.object().shape({
   
   password: yup
     .string()
-    .required('Le mot de passe est requis')
-    .length(4, 'Le mot de passe doit être exactement 4 chiffres')
-    .matches(/^\d{4}$/, 'Le mot de passe doit contenir uniquement 4 chiffres')
+    .required('Le Code PIN est requis')
+    .length(4, 'Le Code PIN doit être exactement 4 chiffres')
+    .matches(/^\d{4}$/, 'Le Code PIN doit contenir uniquement 4 chiffres')
 });
 
 const RegisterPage = () => {
@@ -561,7 +561,7 @@ const RegisterPage = () => {
 
               <div>
                 <label className="block text-gray-700 font-medium mb-1 text-sm">
-                  Mot de passe <span className="text-red-500">*</span>
+                  Code PIN  <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />

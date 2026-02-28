@@ -88,8 +88,8 @@ const LoginPage = () => {
 
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-gray-700 font-medium text-sm">Mot de passe</label>
-                  <Link to="/forgot-password" className="text-xs text-primary-blue hover:underline">Mot de passe oublié ?</Link>
+                  <label className="block text-gray-700 font-medium text-sm">Code PIN </label>
+                  <Link to="/forgot-password" className="text-xs text-primary-blue hover:underline">Code PIN oublié ?</Link>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
