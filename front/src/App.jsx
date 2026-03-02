@@ -18,6 +18,8 @@ import MatchDetailPage from './pages/MatchDetailPage';
 import PronosticPage from './pages/PronosticPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import VoteEquipePage from './pages/VoteEquipePage';
+import EquipesPage from './pages/EquipesPage';
+import BordereauPage from './pages/BordereauPage';
 
 function App() {
   return (
@@ -102,6 +104,10 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* Routes pour les équipes et bordereau */}
+            <Route path="/equipes" element={<EquipesPage />} />
+            <Route path="/equipes/:teamId/bordereau" element={<BordereauPage />} />
 
             <Route path="/admin/login" element={<AdminLoginPage />} />
             <Route

@@ -8,6 +8,7 @@ import {
   LogOut,
   Menu,
   X,
+  Shield,
 } from "lucide-react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +17,7 @@ const menu = [
   { id: "dashboard", label: "Dashboard", icon: Home, href: "/dashboard" },
   { id: "matches", label: "Matchs", icon: Calendar, href: "/matches" },
   { id: "pronostics", label: "Pronostics", icon: Target, href: "/pronostics" },
+  { id: "equipes", label: "Équipes", icon: Shield, href: "/equipes" },
   { id: "vote-equipe", label: "Vote Équipe", icon: Users, href: "/vote-equipe" },
   { id: "leaderboard", label: "Classement", icon: Trophy, href: "/leaderboard" },
 ];

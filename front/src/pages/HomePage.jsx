@@ -249,14 +249,16 @@ const HomePage = () => {
     value: teams.length.toString(),
     color: 'from-blue-400 to-blue-600',
     bgColor: 'bg-blue-600',
-    delay: 0.2
+    delay: 0.2,
+    href: '/equipes'
   }, {
     icon: Calendar,
     label: 'Matchs',
     value: '16',
     color: 'from-red-400 to-red-600',
     bgColor: 'bg-red-600',
-    delay: 0.4
+    delay: 0.4,
+    href: '/matches'
   }, {
     icon: TrendingUp,
     label: 'Participants',
@@ -407,42 +409,56 @@ const HomePage = () => {
             </motion.div>
 
             {/* Stats with Counters */}
-            <motion.div 
-              initial={{ opacity: 0, y: 50 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              transition={{ duration: 0.8, delay: 0.3 }} 
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
               className="m-10 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
             >
-              {stats.map((stat, index) => (
-                <motion.div 
-                  key={index} 
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 hover:bg-white/15 transition-all relative overflow-hidden group"
-                >
-                  {/* Animated background */}
-                  <motion.div 
-                    className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-20`}
-                    animate={{ rotate: [0, 360] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                  />
-                  
-                  <stat.icon className={`w-10 h-10 text-white mx-auto mb-3 relative z-10 group-hover:scale-110 transition-transform`} />
-                  <div className="text-4xl font-black text-white mb-1 relative z-10">
-                    <Counter end={stat.value} duration={4} />
-                  </div>
-                  <div className="text-gray-300 uppercase tracking-widest text-sm relative z-10">
-                    {stat.label}
-                  </div>
-                  
-                  {/* Pulse effect */}
-                  <motion.div 
-                    className={`absolute bottom-0 left-0 h-1 ${stat.bgColor}`}
-                    initial={{ width: "0%" }}
+              {stats.map((stat, index) => {
+                const hasLink = !!stat.href;
+                const cardContent = (
+                  <motion.div
+                    whileHover={{ scale: 1.05, y: -5 }}
+                    className={`bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 hover:bg-white/15 transition-all relative overflow-hidden group ${
+                      hasLink ? 'cursor-pointer' : ''
+                    }`}
+                  >
+                    {/* Animated background */}
+                    <motion.div
+                      className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-20`}
+                      animate={{ rotate: [0, 360] }}
+                      transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                    />
+
+                    <stat.icon className={`w-10 h-10 text-white mx-auto mb-3 relative z-10 group-hover:scale-110 transition-transform`} />
+                    <div className="text-4xl font-black text-white mb-1 relative z-10">
+                      <Counter end={stat.value} duration={4} />
+                    </div>
+                    <div className="text-gray-300 uppercase tracking-widest text-sm relative z-10">
+                      {stat.label}
+                    </div>
+
+                    {/* Pulse effect */}
+                    <motion.div
+                      className={`absolute bottom-0 left-0 h-1 ${stat.bgColor}`}
+                      initial={{ width: "0%" }}
                     animate={{ width: "100%" }}
                     transition={{ duration: 2, delay: stat.delay, repeat: Infinity }}
                   />
                 </motion.div>
-              ))}
+              );
+
+              return (
+                <React.Fragment key={index}>
+                  {hasLink ? (
+                    <Link to={stat.href}>{cardContent}</Link>
+                  ) : (
+                    cardContent
+                  )}
+                </React.Fragment>
+              );
+            })}
             </motion.div>
           </div>
         </section>
