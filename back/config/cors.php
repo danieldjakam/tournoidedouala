@@ -1,0 +1,37 @@
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cross-Origin Resource Sharing (CORS) Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Ici tu configures les accès autorisés depuis ton frontend
+    | vers ton backend Laravel.
+    |
+    */
+
+    'paths' => [
+        'api/*',
+        'sanctum/csrf-cookie',
+    ],
+
+    'allowed_methods' => ['*'],
+
+    'allowed_origins' => [
+        'https://admin.tournoidedouala.com',
+        'https://tournoidedouala.com',
+    ],
+
+    'allowed_origins_patterns' => [],
+
+    'allowed_headers' => ['*'],
+
+    'exposed_headers' => [],
+
+    'max_age' => 0,
+
+    'supports_credentials' => false,
+
+];

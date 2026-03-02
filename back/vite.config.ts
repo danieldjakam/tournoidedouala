@@ -20,6 +20,7 @@ export default defineConfig({
         wayfinder({
             formVariants: true,
         }),
+        
     ],
     esbuild: {
         jsx: 'automatic',

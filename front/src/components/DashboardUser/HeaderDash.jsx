@@ -1,4 +1,4 @@
-import { Bell, Settings, Crown, TrendingUp, Award } from "lucide-react";
+import { Settings, Crown, TrendingUp, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function HeaderDash({ currentUser, userStats = { totalPoints: 0, pronosticsCount: 0, weeklyPoints: 0 }, weeklyTrend = '→', trendColor = 'text-gray-500', weeklyDifference = 0 }) {
@@ -31,7 +31,6 @@ export default function HeaderDash({ currentUser, userStats = { totalPoints: 0, 
 
         <div className="flex gap-2 sm:gap-3 text-white">
           <button className="p-1.5 sm:p-2 hover:bg-white/10 rounded-xl transition-colors relative">
-            <Bell size={18} className="sm:w-5 sm:h-5" />
             <span className="absolute top-0 right-0 w-2 h-2 bg-[#f71a18] rounded-full"></span>
           </button>
           <Link 
