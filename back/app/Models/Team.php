@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Team extends Model
 {
@@ -15,6 +16,7 @@ class Team extends Model
         'nom',
         'code',
         'logo',
+        'logo_path',
         'description',
         'priorite',
     ];
@@ -26,6 +28,12 @@ class Team extends Model
      */
     public function getLogoUrlAttribute(): string
     {
+        // Prioritize uploaded file (logo_path)
+        if ($this->logo_path) {
+            return Storage::disk('public')->url($this->logo_path);
+        }
+        
+        // Fallback to URL stored in logo column
         return $this->logo ?? 'https://via.placeholder.com/48';
     }
 

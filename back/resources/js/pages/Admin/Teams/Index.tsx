@@ -118,9 +118,9 @@ export default function TeamsIndex({ teams, success }: Props) {
                                 <TableRow key={team.id}>
                                     <TableCell>
                                         <div className="flex items-center gap-3">
-                                            {team.logo ? (
+                                            {team.logo_url ? (
                                                 <img
-                                                    src={team.logo}
+                                                    src={team.logo_url}
                                                     alt={team.nom}
                                                     className="w-10 h-10 rounded-full object-cover"
                                                 />

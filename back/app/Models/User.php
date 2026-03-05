@@ -30,6 +30,7 @@ class User extends Authenticatable implements JWTSubject
         'date_naissance',
         'indicatif_pays',
         'points',
+        'avatar_path',
     ];
 
     /**
@@ -57,6 +58,20 @@ class User extends Authenticatable implements JWTSubject
             'two_factor_confirmed_at' => 'datetime',
             'date_naissance' => 'date',
         ];
+    }
+
+    /**
+     * Get the avatar URL attribute.
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        if ($this->avatar_path) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->avatar_path);
+        }
+        
+        // Return default avatar with initials
+        $initials = strtoupper(substr($this->prenom ?? 'U', 0, 1) . substr($this->nom ?? '', 0, 1));
+        return "https://ui-avatars.com/api/?name=" . urlencode($initials) . "&background=023e78&color=fff&size=200";
     }
 
     /**

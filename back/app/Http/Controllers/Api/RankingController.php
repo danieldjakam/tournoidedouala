@@ -30,7 +30,7 @@ class RankingController
     {
         $rankings = Team::withSum('votesAsWinner', 'points')
             ->withSum('tournamentVotes', 'points')
-            ->select('id', 'nom', 'code', 'logo', 'priorite')
+            ->select('id', 'nom', 'code', 'logo', 'logo_path', 'priorite')
             ->get()
             ->map(function ($team) {
                 return [
@@ -38,6 +38,7 @@ class RankingController
                     'nom' => $team->nom,
                     'code' => $team->code,
                     'logo' => $team->logo,
+                    'logo_url' => $team->logo_url,
                     'priorite' => $team->priorite,
                     'total_points' => ($team->votes_as_winner_sum_points ?? 0) + ($team->tournament_votes_sum_points ?? 0),
                 ];

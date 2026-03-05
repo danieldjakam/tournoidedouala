@@ -4,8 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/layouts/admin-layout';
-import { Save, ArrowLeft, Upload } from 'lucide-react';
+import { Save, ArrowLeft, Upload, X } from 'lucide-react';
 import { Link } from '@inertiajs/react';
+import { ChangeEvent, useRef } from 'react';
 
 interface TeamFormProps {
     team?: {
@@ -13,27 +14,108 @@ interface TeamFormProps {
         nom: string;
         code: string;
         logo?: string | null;
+        logo_url?: string;
         description?: string | null;
         priorite: number;
     };
 }
 
 export default function TeamForm({ team }: TeamFormProps) {
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const { data, setData, post, put, processing, errors } = useForm({
         nom: team?.nom ?? '',
         code: team?.code ?? '',
-        logo: team?.logo ?? '',
+        logo: null as File | null,
+        logo_url: team?.logo_url || team?.logo || '',
         description: team?.description ?? '',
         priorite: (team?.priorite ?? 0).toString(),
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
         if (team) {
-            put(`/admin/teams/${team.id}`);
+            // For update with file upload, use POST with explicit route
+            if (data.logo) {
+                const formData = new FormData();
+                formData.append('nom', data.nom);
+                formData.append('code', data.code);
+                formData.append('description', data.description);
+                formData.append('priorite', data.priorite);
+                formData.append('logo', data.logo);
+                // Don't send logo_url when there's a file upload
+
+                // Use the specific POST route for updates with files
+                post(`/admin/teams/${team.id}`, formData, {
+                    onSuccess: () => {
+                        if (fileInputRef.current) {
+                            fileInputRef.current.value = '';
+                        }
+                    }
+                });
+            } else {
+                // No file, use regular PUT with JSON
+                put(`/admin/teams/${team.id}`, {
+                    nom: data.nom,
+                    code: data.code,
+                    description: data.description,
+                    priorite: data.priorite,
+                    logo_url: data.logo_url,
+                });
+            }
         } else {
-            post('/admin/teams');
+            // For create, use FormData
+            const formData = new FormData();
+            formData.append('nom', data.nom);
+            formData.append('code', data.code);
+            formData.append('description', data.description);
+            formData.append('priorite', data.priorite);
+
+            if (data.logo) {
+                formData.append('logo', data.logo);
+            }
+            if (data.logo_url && !data.logo) {
+                formData.append('logo_url', data.logo_url);
+            }
+
+            post('/admin/teams', formData, {
+                onSuccess: () => {
+                    if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                    }
+                }
+            });
         }
+    };
+
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 2 * 1024 * 1024) {
+                errors.logo = 'Le fichier ne doit pas dépasser 2 Mo';
+                return;
+            }
+            if (!file.type.startsWith('image/')) {
+                errors.logo = 'Le fichier doit être une image';
+                return;
+            }
+            setData('logo', file);
+            setData('logo_url', ''); // Clear URL when file is selected
+        }
+    };
+
+    const handleRemoveFile = () => {
+        setData('logo', null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const getPreviewUrl = () => {
+        if (data.logo) {
+            return URL.createObjectURL(data.logo);
+        }
+        return data.logo_url;
     };
 
     return (
@@ -56,13 +138,20 @@ export default function TeamForm({ team }: TeamFormProps) {
                     <div className="grid gap-2">
                         <Label>Logo</Label>
                         <div className="flex items-center gap-4">
-                            {data.logo ? (
+                            {getPreviewUrl() ? (
                                 <div className="relative w-20 h-20 rounded-full overflow-hidden border border-gray-200 dark:border-gray-700">
                                     <img
-                                        src={data.logo}
+                                        src={getPreviewUrl()}
                                         alt="Logo"
                                         className="w-full h-full object-cover"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={handleRemoveFile}
+                                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
                                 </div>
                             ) : (
                                 <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -72,21 +161,23 @@ export default function TeamForm({ team }: TeamFormProps) {
                                 </div>
                             )}
                             <div className="flex-1">
-                                <Input
-                                    type="url"
-                                    value={data.logo}
-                                    onChange={(e) => setData('logo', e.target.value)}
-                                    placeholder="https://exemple.com/logo.png"
-                                    className={errors.logo ? 'border-red-500' : ''}
-                                />
+                                <div className="flex gap-2">
+                                    <Input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className={errors.logo ? 'border-red-500' : ''}
+                                    />
+                                </div>
                                 <p className="text-xs text-gray-500 mt-1">
-                                    URL de l'image du logo (optionnel)
+                                    Téléchargez le logo depuis votre appareil (JPEG, PNG, GIF, SVG - max 2 Mo)
                                 </p>
+                                {errors.logo && (
+                                    <p className="text-sm text-red-500">{errors.logo}</p>
+                                )}
                             </div>
                         </div>
-                        {errors.logo && (
-                            <p className="text-sm text-red-500">{errors.logo}</p>
-                        )}
                     </div>
 
                     <div className="grid gap-2">

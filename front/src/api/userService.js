@@ -1,4 +1,4 @@
-import { post, get, getToken, setToken, clearToken, getErrorMessage, ApiError } from '@/lib/apiClient';
+import { post, get, getToken, setToken, clearToken, getErrorMessage, ApiError, put, deleteRequest } from '@/lib/apiClient';
 
 const CURRENT_USER_KEY = 'current_user';
 
@@ -269,17 +269,226 @@ export const requestPasswordReset = async (identifier) => {
  */
 export const updateUserProfile = async (userId, updates) => {
   try {
-    // TODO: Implement on backend (PUT /api/users/{id})
+    // Map frontend fields to backend fields
+    const backendData = {};
     
+    if (updates.firstname !== undefined) backendData.prenom = updates.firstname;
+    if (updates.name !== undefined) backendData.nom = updates.name;
+    if (updates.email !== undefined) backendData.email = updates.email;
+    if (updates.phone !== undefined) backendData.telephone = updates.phone;
+    if (updates.gender !== undefined) {
+      backendData.sexe = updates.gender === 'homme' ? 'M' : 'F';
+    }
+    if (updates.date_of_birth !== undefined) backendData.date_naissance = updates.date_of_birth;
+    if (updates.countryCode !== undefined) backendData.indicatif_pays = updates.countryCode;
+
+    const response = await put('/user/profile', backendData);
+
+    if (response.user) {
+      const mappedUser = mapUserToFrontend(response.user);
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(mappedUser));
+
+      return {
+        success: true,
+        user: mappedUser,
+        message: response.message,
+      };
+    }
+
     return {
       success: false,
-      error: 'Non implémenté côté serveur',
+      error: response.message || 'Erreur lors de la mise à jour',
     };
   } catch (error) {
     console.error('Update profile error:', error);
-    
+
+    const message = getErrorMessage(error);
+
+    // Handle validation errors from backend
+    if (error instanceof ApiError && error.errors) {
+      const fieldErrors = Object.entries(error.errors)
+        .map(([field, msgs]) => `${field}: ${msgs.join(', ')}`)
+        .join('\n');
+
+      return {
+        success: false,
+        error: fieldErrors,
+      };
+    }
+
     return {
       success: false,
+      error: message,
+    };
+  }
+};
+
+/**
+ * Upload user avatar
+ */
+export const uploadAvatar = async (avatarFile) => {
+  try {
+    const formData = new FormData();
+    formData.append('avatar', avatarFile);
+
+    const response = await post('/user/avatar', formData);
+
+    if (response.avatar_url) {
+      // Update stored user
+      const currentUser = getCurrentUser();
+      if (currentUser) {
+        currentUser.avatar_url = response.avatar_url;
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+      }
+
+      return {
+        success: true,
+        avatar_url: response.avatar_url,
+        message: response.message,
+      };
+    }
+
+    return {
+      success: false,
+      error: response.message || 'Erreur lors de l\'upload',
+    };
+  } catch (error) {
+    console.error('Upload avatar error:', error);
+
+    const message = getErrorMessage(error);
+
+    // Handle validation errors from backend
+    if (error instanceof ApiError && error.errors) {
+      const fieldErrors = Object.entries(error.errors)
+        .map(([field, msgs]) => `${field}: ${msgs.join(', ')}`)
+        .join('\n');
+
+      return {
+        success: false,
+        error: fieldErrors,
+      };
+    }
+
+    return {
+      success: false,
+      error: message,
+    };
+  }
+};
+
+/**
+ * Delete user avatar
+ */
+export const deleteAvatar = async () => {
+  try {
+    const response = await deleteRequest('/user/avatar');
+
+    if (response.avatar_url) {
+      // Update stored user
+      const currentUser = getCurrentUser();
+      if (currentUser) {
+        currentUser.avatar_url = response.avatar_url;
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+      }
+
+      return {
+        success: true,
+        avatar_url: response.avatar_url,
+        message: response.message,
+      };
+    }
+
+    return {
+      success: false,
+      error: response.message || 'Erreur lors de la suppression',
+    };
+  } catch (error) {
+    console.error('Delete avatar error:', error);
+    return {
+      success: false,
+      error: getErrorMessage(error),
+    };
+  }
+};
+
+/**
+ * Change password
+ */
+export const changePassword = async (currentPassword, newPassword, confirmPassword) => {
+  try {
+    const response = await post('/user/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    });
+
+    return {
+      success: true,
+      message: response.message,
+    };
+  } catch (error) {
+    console.error('Change password error:', error);
+
+    const message = getErrorMessage(error);
+
+    // Handle validation errors from backend
+    if (error instanceof ApiError && error.errors) {
+      const fieldErrors = Object.entries(error.errors)
+        .map(([field, msgs]) => `${field}: ${msgs.join(', ')}`)
+        .join('\n');
+
+      return {
+        success: false,
+        error: fieldErrors,
+      };
+    }
+
+    return {
+      success: false,
+      error: message,
+    };
+  }
+};
+
+/**
+ * Get user activity (votes history)
+ */
+export const getUserActivity = async () => {
+  try {
+    const response = await get('/user/activity');
+
+    return {
+      success: true,
+      activity: response.activity || { match_votes: [], tournament_votes: [] },
+      stats: response.stats || {},
+    };
+  } catch (error) {
+    console.error('Get activity error:', error);
+    return {
+      success: false,
+      activity: { match_votes: [], tournament_votes: [] },
+      stats: {},
+      error: getErrorMessage(error),
+    };
+  }
+};
+
+/**
+ * Get user statistics
+ */
+export const getUserStats = async () => {
+  try {
+    const response = await get('/user/stats');
+
+    return {
+      success: true,
+      stats: response.stats || {},
+    };
+  } catch (error) {
+    console.error('Get stats error:', error);
+    return {
+      success: false,
+      stats: {},
       error: getErrorMessage(error),
     };
   }

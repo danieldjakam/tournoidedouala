@@ -1,51 +1,224 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import {
   User, Mail, Phone, Calendar, MapPin, Shield, LogOut, Edit2, Save, X,
   Camera, Award, Target, Trophy, TrendingUp, ChevronRight, Star,
-  Activity, History, Settings, ArrowLeft, Menu
+  Activity, History, Settings, ArrowLeft, Menu, CheckCircle, XCircle, Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { updateUserProfile } from '@/api/userService';
+import { 
+  updateUserProfile, 
+  uploadAvatar, 
+  deleteAvatar, 
+  changePassword,
+  getUserActivity,
+  getUserStats 
+} from '@/api/userService';
 import { useToast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
 import Sidebar from "../components/layout/Sidebar";
 
 const UserProfilePage = () => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [activeSection, setActiveSection] = useState('personal');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showMobileSectionMenu, setShowMobileSectionMenu] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [activityData, setActivityData] = useState(null);
+  const [userStats, setUserStats] = useState({
+    totalPoints: currentUser?.points || 0,
+    rank: 0,
+    predictions: 0,
+    accuracy: 0
+  });
   const [formData, setFormData] = useState({
     name: currentUser?.name || '',
     firstname: currentUser?.firstname || '',
     email: currentUser?.email || '',
     phone: currentUser?.phone || '',
     gender: currentUser?.gender || '',
-    date_of_birth: currentUser?.date_of_birth || ''
+    date_of_birth: currentUser?.dateOfBirth || ''
   });
+  const [passwordData, setPasswordData] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: ''
+  });
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const { toast } = useToast();
 
-  const userStats = {
-    totalPoints: currentUser?.points || 0,
-    rank: currentUser?.rank || 0,
-    predictions: currentUser?.predictions_count || 0,
-    accuracy: currentUser?.accuracy || 0
+  // Charger les statistiques et l'activité au montage
+  useEffect(() => {
+    if (currentUser) {
+      loadStats();
+      loadActivity();
+    }
+  }, [currentUser]);
+
+  const loadStats = async () => {
+    try {
+      const result = await getUserStats();
+      if (result.success) {
+        setUserStats({
+          totalPoints: result.stats.total_points || currentUser?.points || 0,
+          rank: result.stats.rank || 0,
+          predictions: result.stats.predictions_count || 0,
+          accuracy: result.stats.accuracy || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
+
+  const loadActivity = async () => {
+    try {
+      const result = await getUserActivity();
+      if (result.success) {
+        setActivityData(result);
+      }
+    } catch (error) {
+      console.error('Error loading activity:', error);
+    }
   };
 
   const handleUpdate = async () => {
+    setLoading(true);
     const result = await updateUserProfile(currentUser.id, formData);
+    setLoading(false);
+    
     if (result.success) {
       toast({
         title: "Profil mis à jour",
-        description: "Vos informations ont été enregistrées avec succès."
+        description: "Vos informations ont été enregistrées avec succès.",
+        variant: "default"
       });
       setIsEditing(false);
-      setTimeout(() => window.location.reload(), 1000);
+      loadStats();
+    } else {
+      toast({
+        title: "Erreur",
+        description: result.error || "Une erreur est survenue",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Fichier trop volumineux",
+        description: "L'image ne doit pas dépasser 2 Mo",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Type de fichier invalide",
+        description: "Veuillez sélectionner une image",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    const result = await uploadAvatar(file);
+    setLoading(false);
+
+    if (result.success) {
+      toast({
+        title: "Avatar mis à jour",
+        description: "Votre photo de profil a été changée avec succès",
+        variant: "default"
+      });
+      // Force reload to update avatar everywhere
+      window.location.reload();
+    } else {
+      toast({
+        title: "Erreur",
+        description: result.error || "Une erreur est survenue",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer votre avatar ?')) return;
+
+    setLoading(true);
+    const result = await deleteAvatar();
+    setLoading(false);
+
+    if (result.success) {
+      toast({
+        title: "Avatar supprimé",
+        description: "Votre photo de profil a été supprimée",
+        variant: "default"
+      });
+      window.location.reload();
+    } else {
+      toast({
+        title: "Erreur",
+        description: result.error || "Une erreur est survenue",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwordData.current_password || !passwordData.new_password || !passwordData.confirm_password) {
+      toast({
+        title: "Champs requis",
+        description: "Veuillez remplir tous les champs",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (passwordData.new_password !== passwordData.confirm_password) {
+      toast({
+        title: "Erreur",
+        description: "Les nouveaux mots de passe ne correspondent pas",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (passwordData.new_password.length !== 4 || !/^\d+$/.test(passwordData.new_password)) {
+      toast({
+        title: "Format invalide",
+        description: "Le mot de passe doit contenir exactement 4 chiffres",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    const result = await changePassword(
+      passwordData.current_password,
+      passwordData.new_password,
+      passwordData.confirm_password
+    );
+    setLoading(false);
+
+    if (result.success) {
+      toast({
+        title: "Mot de passe modifié",
+        description: "Votre mot de passe a été changé avec succès",
+        variant: "default"
+      });
+      setPasswordData({ current_password: '', new_password: '', confirm_password: '' });
+      setShowPasswordForm(false);
     } else {
       toast({
         title: "Erreur",
@@ -64,7 +237,7 @@ const UserProfilePage = () => {
     }
   };
 
-  if (!currentUser) return null;
+  if (!currentUser || authLoading) return null;
 
   const statsCards = [
     { title: "Points", value: userStats.totalPoints, icon: Trophy, color: "from-[#023e78] to-[#023e78]/80", bgColor: "bg-white" },
@@ -78,6 +251,10 @@ const UserProfilePage = () => {
     { id: 'account', label: 'Compte', icon: Shield },
     { id: 'activity', label: 'Activité', icon: Activity },
   ];
+
+  const getAvatarUrl = () => {
+    return currentUser?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.firstname?.charAt(0) || 'U')}+${encodeURIComponent(currentUser?.name?.charAt(0) || '')}&background=023e78&color=fff&size=200`;
+  };
 
   return (
     <>
@@ -111,8 +288,7 @@ const UserProfilePage = () => {
               <Menu size={20} />
             </button>
           </div>
-          
-          {/* Mobile Section Menu Dropdown */}
+
           {showMobileSectionMenu && (
             <div className="border-t border-gray-200 bg-white px-4 py-3 space-y-2">
               {profileSections.map((section) => {
@@ -149,7 +325,7 @@ const UserProfilePage = () => {
           )}
         </div>
 
-        {/* Sidebar - Hidden on mobile */}
+        {/* Sidebar */}
         <div className="hidden md:block">
           <Sidebar
             activeTab="dashboard"
@@ -176,27 +352,28 @@ const UserProfilePage = () => {
               <div className="text-center px-4">
                 <div className="relative inline-block">
                   <div className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-[#f71a18] via-[#f71a18]/90 to-[#f71a18]/80 p-1 shadow-2xl">
-                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
-                      <span className="text-2xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-br from-[#023e78] to-[#023e78]/80 bg-clip-text text-transparent">
-                        {currentUser.firstname?.charAt(0) || currentUser.name?.charAt(0) || 'U'}
-                      </span>
+                    <div className="w-full h-full rounded-full bg-white overflow-hidden">
+                      <img
+                        src={getAvatarUrl()}
+                        alt={currentUser.firstname}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   </div>
-                  <button className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-[#f71a18] hover:bg-[#f71a18]/90 text-white rounded-full flex items-center justify-center shadow-lg transition-colors border-2 border-white">
+                  <label className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-[#f71a18] hover:bg-[#f71a18]/90 text-white rounded-full flex items-center justify-center shadow-lg transition-colors border-2 border-white cursor-pointer">
                     <Camera size={14} className="sm:w-4 md:w-5" />
-                  </button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                      disabled={loading}
+                    />
+                  </label>
                 </div>
                 <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white mt-2 sm:mt-3 line-clamp-1 px-2 my-2">
                   {currentUser.firstname} {currentUser.name}
                 </h1>
-                {/* <p className="text-blue-100 text-xs sm:text-sm mt-1">
-                  {currentUser.pseudo || 'Membre du Tournoi'}
-                </p> */}
-                {/* <div className="flex items-center justify-center gap-2 mt-2">
-                  <span className="bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full max-w-[200px] sm:max-w-none truncate block">
-                    {currentUser.email || 'Email non renseigné'}
-                  </span>
-                </div> */}
               </div>
             </div>
           </div>
@@ -222,7 +399,7 @@ const UserProfilePage = () => {
           {/* Profile Content */}
           <div className="px-4 sm:px-6 md:px-8 mt-4 sm:mt-6 md:mt-8">
             <div className="flex flex-col md:grid md:grid-cols-4 gap-4 sm:gap-6">
-              {/* Sidebar Navigation - Hidden on mobile, shown on desktop */}
+              {/* Sidebar Navigation */}
               <div className="hidden md:block lg:col-span-1">
                 <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-4 sticky top-6">
                   <nav className="space-y-2">
@@ -289,16 +466,18 @@ const UserProfilePage = () => {
                                 email: currentUser?.email || '',
                                 phone: currentUser?.phone || '',
                                 gender: currentUser?.gender || '',
-                                date_of_birth: currentUser?.date_of_birth || ''
+                                date_of_birth: currentUser?.dateOfBirth || ''
                               });
                             }}
                             className="flex-1 sm:flex-none"
+                            disabled={loading}
                           >
                             <X className="w-4 h-4" />
                           </Button>
                           <Button
                             onClick={handleUpdate}
                             className="bg-[#f71a18] hover:bg-[#f71a18]/90 text-white flex-1 sm:flex-none"
+                            disabled={loading}
                           >
                             <Save className="w-4 h-4 mr-2" /> Enregistrer
                           </Button>
@@ -318,6 +497,7 @@ const UserProfilePage = () => {
                               className="w-full border border-gray-300 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#023e78] focus:border-transparent transition-all"
                               value={formData.firstname}
                               onChange={e => setFormData({...formData, firstname: e.target.value})}
+                              disabled={loading}
                             />
                           ) : (
                             <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
@@ -337,6 +517,7 @@ const UserProfilePage = () => {
                               className="w-full border border-gray-300 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#023e78] focus:border-transparent transition-all"
                               value={formData.name}
                               onChange={e => setFormData({...formData, name: e.target.value})}
+                              disabled={loading}
                             />
                           ) : (
                             <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
@@ -357,6 +538,7 @@ const UserProfilePage = () => {
                               className="w-full border border-gray-300 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#023e78] focus:border-transparent transition-all"
                               value={formData.email}
                               onChange={e => setFormData({...formData, email: e.target.value})}
+                              disabled={loading}
                             />
                           ) : (
                             <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
@@ -377,6 +559,7 @@ const UserProfilePage = () => {
                               className="w-full border border-gray-300 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#023e78] focus:border-transparent transition-all"
                               value={formData.phone}
                               onChange={e => setFormData({...formData, phone: e.target.value})}
+                              disabled={loading}
                             />
                           ) : (
                             <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
@@ -396,15 +579,16 @@ const UserProfilePage = () => {
                               className="w-full border border-gray-300 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#023e78] focus:border-transparent transition-all"
                               value={formData.gender}
                               onChange={e => setFormData({...formData, gender: e.target.value})}
+                              disabled={loading}
                             >
                               <option value="">Sélectionner</option>
-                              <option value="male">Masculin</option>
-                              <option value="female">Féminin</option>
+                              <option value="homme">Masculin</option>
+                              <option value="femme">Féminin</option>
                             </select>
                           ) : (
                             <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
                               <User size={16} className="sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
-                              <p className="text-gray-900 font-medium text-sm sm:text-base capitalize">{currentUser.gender || 'Non renseigné'}</p>
+                              <p className="text-gray-900 font-medium text-sm sm:text-base capitalize">{currentUser.gender === 'homme' ? 'Masculin' : currentUser.gender === 'femme' ? 'Féminin' : 'Non renseigné'}</p>
                             </div>
                           )}
                         </div>
@@ -420,13 +604,14 @@ const UserProfilePage = () => {
                               className="w-full border border-gray-300 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#023e78] focus:border-transparent transition-all"
                               value={formData.date_of_birth}
                               onChange={e => setFormData({...formData, date_of_birth: e.target.value})}
+                              disabled={loading}
                             />
                           ) : (
                             <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3">
                               <Calendar size={16} className="sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
                               <p className="text-gray-900 font-medium text-sm sm:text-base">
-                                {currentUser.date_of_birth
-                                  ? format(new Date(currentUser.date_of_birth), 'dd/MM/yyyy')
+                                {currentUser.dateOfBirth
+                                  ? format(new Date(currentUser.dateOfBirth), 'dd/MM/yyyy')
                                   : 'Non renseigné'}
                               </p>
                             </div>
@@ -457,41 +642,97 @@ const UserProfilePage = () => {
                             <p className="text-xs sm:text-sm text-gray-500">Changez votre mot de passe régulièrement</p>
                           </div>
                         </div>
-                        <Button className="bg-[#023e78] hover:bg-[#023e78]/90 text-white w-full sm:w-auto text-sm sm:text-base">
-                          <Shield className="w-4 h-4 mr-2" /> Changer le mot de passe
-                        </Button>
+                        
+                        {!showPasswordForm ? (
+                          <Button 
+                            onClick={() => setShowPasswordForm(true)}
+                            className="bg-[#023e78] hover:bg-[#023e78]/90 text-white w-full sm:w-auto text-sm sm:text-base"
+                          >
+                            Changer le mot de passe
+                          </Button>
+                        ) : (
+                          <div className="space-y-3 mt-4">
+                            <div>
+                              <label className="text-xs text-gray-500 uppercase font-semibold mb-1 block">Mot de passe actuel</label>
+                              <input
+                                type="password"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#023e78]"
+                                value={passwordData.current_password}
+                                onChange={(e) => setPasswordData({...passwordData, current_password: e.target.value})}
+                                placeholder="****"
+                                maxLength={4}
+                                disabled={loading}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-500 uppercase font-semibold mb-1 block">Nouveau mot de passe</label>
+                              <input
+                                type="password"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#023e78]"
+                                value={passwordData.new_password}
+                                onChange={(e) => setPasswordData({...passwordData, new_password: e.target.value})}
+                                placeholder="****"
+                                maxLength={4}
+                                disabled={loading}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-500 uppercase font-semibold mb-1 block">Confirmer le mot de passe</label>
+                              <input
+                                type="password"
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#023e78]"
+                                value={passwordData.confirm_password}
+                                onChange={(e) => setPasswordData({...passwordData, confirm_password: e.target.value})}
+                                placeholder="****"
+                                maxLength={4}
+                                disabled={loading}
+                              />
+                            </div>
+                            <div className="flex gap-2 pt-2">
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  setShowPasswordForm(false);
+                                  setPasswordData({ current_password: '', new_password: '', confirm_password: '' });
+                                }}
+                                className="flex-1"
+                                disabled={loading}
+                              >
+                                Annuler
+                              </Button>
+                              <Button
+                                onClick={handleChangePassword}
+                                className="bg-[#f71a18] hover:bg-[#f71a18]/90 text-white flex-1"
+                                disabled={loading}
+                              >
+                                <Save className="w-4 h-4 mr-2" /> Enregistrer
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Notifications */}
+                      {/* Avatar Management */}
                       <div className="bg-gradient-to-r from-[#f71a18]/10 to-[#f71a18]/5 rounded-xl p-4 sm:p-5 border border-[#f71a18]/20">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
                           <div className="w-10 h-10 rounded-xl bg-[#f71a18] flex items-center justify-center flex-shrink-0">
-                            <Settings size={20} className="text-white" />
+                            <Camera size={20} className="text-white" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Notifications</h3>
-                            <p className="text-xs sm:text-sm text-gray-500">Gérez vos préférences de notification</p>
+                            <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Photo de profil</h3>
+                            <p className="text-xs sm:text-sm text-gray-500">Gérez votre avatar</p>
                           </div>
                         </div>
-                        <Button className="bg-[#f71a18] hover:bg-[#f71a18]/90 text-white w-full sm:w-auto text-sm sm:text-base">
-                          <Settings className="w-4 h-4 mr-2" /> Paramètres de notification
-                        </Button>
-                      </div>
-
-                      {/* Privacy */}
-                      <div className="bg-gradient-to-r from-[#023e78]/5 to-[#f71a18]/5 rounded-xl p-4 sm:p-5 border border-gray-200">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#023e78] to-[#f71a18] flex items-center justify-center flex-shrink-0">
-                            <Shield size={20} className="text-white" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Confidentialité</h3>
-                            <p className="text-xs sm:text-sm text-gray-500">Contrôlez qui peut voir vos informations</p>
-                          </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={handleDeleteAvatar}
+                            className="text-[#f71a18] border-[#f71a18]/20 hover:bg-[#f71a18]/5"
+                            disabled={loading}
+                          >
+                            Supprimer l'avatar
+                          </Button>
                         </div>
-                        <Button className="bg-gradient-to-r from-[#023e78] to-[#f71a18] hover:from-[#023e78]/90 hover:to-[#f71a18]/90 text-white w-full sm:w-auto text-sm sm:text-base">
-                          <Shield className="w-4 h-4 mr-2" /> Paramètres de confidentialité
-                        </Button>
                       </div>
                     </div>
                   </div>
@@ -502,26 +743,122 @@ const UserProfilePage = () => {
                   <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
                     <div className="p-4 sm:p-6 border-b border-gray-100">
                       <h2 className="text-lg sm:text-xl font-bold text-gray-900">Activité Récente</h2>
-                      <p className="text-gray-500 text-xs sm:text-sm mt-1">Consultez votre historique de pronostics</p>
+                      <p className="text-gray-500 text-xs sm:text-sm mt-1">Historique de vos pronostics</p>
                     </div>
 
                     <div className="p-4 sm:p-6">
-                      <div className="flex items-center justify-center py-8 sm:py-12">
-                        <div className="text-center px-4">
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#023e78]/10 to-[#f71a18]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <History size={32} className="sm:w-10 sm:h-10 text-[#023e78]" />
+                      {/* Stats Summary */}
+                      {activityData?.stats && (
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                          <div className="bg-gradient-to-br from-[#023e78]/10 to-[#023e78]/5 rounded-xl p-3 text-center border border-[#023e78]/20">
+                            <p className="text-2xl font-bold text-[#023e78]">{activityData.stats.total_votes || 0}</p>
+                            <p className="text-xs text-gray-500 mt-1">Total votes</p>
                           </div>
-                          <h3 className="font-semibold text-gray-900 mb-2 text-base sm:text-lg">Historique d'activité</h3>
-                          <p className="text-gray-500 text-xs sm:text-sm max-w-md mx-auto">
-                            Vos pronostics et votes récents apparaîtront ici. Continuez à participer pour voir votre activité !
-                          </p>
-                          <Button
-                            onClick={() => navigate('/matches')}
-                            className="mt-4 bg-[#023e78] hover:bg-[#023e78]/90 text-white text-sm sm:text-base"
-                          >
-                            <Target className="w-4 h-4 mr-2" /> Faire un pronostic
-                          </Button>
+                          <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 rounded-xl p-3 text-center border border-green-500/20">
+                            <p className="text-2xl font-bold text-green-600">{activityData.stats.correct_votes || 0}</p>
+                            <p className="text-xs text-gray-500 mt-1">Votes corrects</p>
+                          </div>
+                          <div className="bg-gradient-to-br from-[#f71a18]/10 to-[#f71a18]/5 rounded-xl p-3 text-center border border-[#f71a18]/20">
+                            <p className="text-2xl font-bold text-[#f71a18]">{activityData.stats.accuracy || 0}%</p>
+                            <p className="text-xs text-gray-500 mt-1">Précision</p>
+                          </div>
+                          <div className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 rounded-xl p-3 text-center border border-purple-500/20">
+                            <p className="text-2xl font-bold text-purple-600">{userStats.totalPoints}</p>
+                            <p className="text-xs text-gray-500 mt-1">Points totaux</p>
+                          </div>
                         </div>
+                      )}
+
+                      {/* Match Votes */}
+                      <div className="mb-6">
+                        <h3 className="font-bold text-gray-900 text-sm sm:text-base mb-3 flex items-center gap-2">
+                          <Target size={18} className="text-[#023e78]" />
+                          Pronostics Matchs
+                        </h3>
+                        {activityData?.activity?.match_votes && activityData.activity.match_votes.length > 0 ? (
+                          <div className="space-y-2">
+                            {activityData.activity.match_votes.slice(0, 10).map((vote) => (
+                              <div key={vote.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-[#023e78]/30 transition-colors">
+                                <div className="flex-1">
+                                  <p className="font-medium text-sm text-gray-900">
+                                    {vote.match?.team1} vs {vote.match?.team2}
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-0.5">
+                                    Vote: {vote.team_vote} {vote.player_vote && `• Homme du match: ${vote.player_vote}`}
+                                  </p>
+                                  <p className="text-xs text-gray-400 mt-0.5">
+                                    {format(new Date(vote.created_at), 'dd/MM/yyyy')}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {vote.validated ? (
+                                    <div className="flex items-center gap-1 text-green-600">
+                                      <CheckCircle size={16} />
+                                      <span className="text-xs font-medium">+{vote.points}</span>
+                                    </div>
+                                  ) : vote.match?.statut === 'termine' ? (
+                                    <div className="flex items-center gap-1 text-gray-400">
+                                      <XCircle size={16} />
+                                      <span className="text-xs">0</span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-1 text-gray-400">
+                                      <Clock size={16} />
+                                      <span className="text-xs">En attente</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <Activity size={48} className="mx-auto mb-2 text-gray-300" />
+                            <p className="text-sm">Aucun pronostic de match</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Tournament Votes */}
+                      <div>
+                        <h3 className="font-bold text-gray-900 text-sm sm:text-base mb-3 flex items-center gap-2">
+                          <Trophy size={18} className="text-[#f71a18]" />
+                          Pronostic Tournoi
+                        </h3>
+                        {activityData?.activity?.tournament_votes && activityData.activity.tournament_votes.length > 0 ? (
+                          <div className="space-y-2">
+                            {activityData.activity.tournament_votes.map((vote) => (
+                              <div key={vote.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-[#f71a18]/30 transition-colors">
+                                <div className="flex-1">
+                                  <p className="font-medium text-sm text-gray-900">
+                                    Vainqueur: {vote.team_vote}
+                                  </p>
+                                  <p className="text-xs text-gray-400 mt-0.5">
+                                    {format(new Date(vote.created_at), 'dd/MM/yyyy')}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {vote.validated ? (
+                                    <div className="flex items-center gap-1 text-green-600">
+                                      <CheckCircle size={16} />
+                                      <span className="text-xs font-medium">+{vote.points}</span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center gap-1 text-gray-400">
+                                      <Clock size={16} />
+                                      <span className="text-xs">En attente</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <Trophy size={48} className="mx-auto mb-2 text-gray-300" />
+                            <p className="text-sm">Aucun pronostic pour le tournoi</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

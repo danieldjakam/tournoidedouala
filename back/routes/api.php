@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\MatchController;
 use App\Http\Controllers\Api\VoteController;
 use App\Http\Controllers\Api\RankingController;
 use App\Http\Controllers\Api\TeamController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -30,6 +31,17 @@ Route::prefix('teams')->group(function () {
 
 // Protected routes (requires auth:api)
 Route::middleware('auth:api')->group(function () {
+    // User profile routes
+    Route::prefix('user')->group(function () {
+        Route::get('profile', [UserController::class, 'profile']);
+        Route::put('profile', [UserController::class, 'updateProfile']);
+        Route::post('avatar', [UserController::class, 'uploadAvatar']);
+        Route::delete('avatar', [UserController::class, 'deleteAvatar']);
+        Route::post('change-password', [UserController::class, 'changePassword']);
+        Route::get('activity', [UserController::class, 'activity']);
+        Route::get('stats', [UserController::class, 'stats']);
+    });
+
     Route::prefix('matches/{match}')->group(function () {
         Route::get('/my-vote', [MatchController::class, 'getUserVote']);
     });

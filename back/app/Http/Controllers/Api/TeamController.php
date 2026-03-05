@@ -13,7 +13,17 @@ class TeamController
      */
     public function index(): JsonResponse
     {
-        $teams = Team::all();
+        $teams = Team::all()->map(function ($team) {
+            return [
+                'id' => $team->id,
+                'nom' => $team->nom,
+                'code' => $team->code,
+                'logo' => $team->logo,
+                'logo_url' => $team->logo_url,
+                'description' => $team->description,
+                'priorite' => $team->priorite,
+            ];
+        });
 
         return response()->json([
             'data' => $teams,
@@ -26,7 +36,11 @@ class TeamController
     public function show(Team $team): JsonResponse
     {
         $data = [
-            'data' => $team->load('players'),
+            'data' => [
+                ...$team->toArray(),
+                'logo_url' => $team->logo_url,
+            ],
+            'players' => $team->players,
         ];
 
         return response()->json($data, 200);

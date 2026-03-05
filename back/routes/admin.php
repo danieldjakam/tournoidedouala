@@ -20,6 +20,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Teams management
     Route::resource('teams', TeamController::class);
+    // Additional POST route for FormData with file upload (Inertia method spoofing workaround)
+    Route::post('teams/{team}', [TeamController::class, 'update'])->where('team', '[0-9]+')->name('teams.update-post');
 
     // Players management
     Route::resource('players', PlayerController::class);
