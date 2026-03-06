@@ -1,5 +1,5 @@
-import { Head, usePage } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 import AdminLayout from '@/layouts/admin-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -18,7 +18,6 @@ import {
     TrendingUp,
     Target,
     Award,
-    RefreshCw,
 } from 'lucide-react';
 
 interface TeamRanking {
@@ -52,33 +51,13 @@ interface UserRanking {
     tournament_votes: number;
 }
 
-export default function RankingsIndex() {
+interface Props {
+    teamRankings: TeamRanking[];
+    userRankings: UserRanking[];
+}
+
+export default function RankingsIndex({ teamRankings, userRankings }: Props) {
     const [activeTab, setActiveTab] = useState<'teams' | 'users'>('teams');
-    const [teamRankings, setTeamRankings] = useState<TeamRanking[]>([]);
-    const [userRankings, setUserRankings] = useState<UserRanking[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    const fetchRankings = async () => {
-        setLoading(true);
-        try {
-            const [teamsRes, usersRes] = await Promise.all([
-                fetch('/admin/rankings/teams'),
-                fetch('/admin/rankings/users'),
-            ]);
-            const teamsData = await teamsRes.json();
-            const usersData = await usersRes.json();
-            setTeamRankings(teamsData);
-            setUserRankings(usersData);
-        } catch (error) {
-            console.error('Error fetching rankings:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchRankings();
-    }, []);
 
     const getFormBadgeColor = (result: string) => {
         switch (result) {
@@ -131,14 +110,6 @@ export default function RankingsIndex() {
                     <Users className="w-4 h-4" />
                     Pronostiqueurs
                 </button>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={fetchRankings}
-                    className="ml-auto"
-                >
-                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                </Button>
             </div>
 
             {/* Classement des équipes */}

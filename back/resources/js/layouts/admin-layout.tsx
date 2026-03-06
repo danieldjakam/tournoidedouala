@@ -15,11 +15,11 @@ export default function AdminLayout({
     return (
         <div className="flex min-h-screen w-full bg-white dark:bg-gray-950">
             <AdminSidebar />
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-w-0">
                 {(title || description) && (
-                    <div className="border-b border-gray-200 dark:border-slate-700 px-6 py-4 bg-white dark:bg-gray-900">
+                    <div className="border-b border-gray-200 dark:border-slate-700 px-4 sm:px-6 py-4 bg-white dark:bg-gray-900">
                         {title && (
-                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{title}</h1>
+                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{title}</h1>
                         )}
                         {description && (
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -28,7 +28,7 @@ export default function AdminLayout({
                         )}
                     </div>
                 )}
-                <div className="flex-1 overflow-auto p-6 bg-gray-50 dark:bg-gray-950">{children}</div>
+                <div className="flex-1 overflow-auto p-4 sm:p-6 bg-gray-50 dark:bg-gray-950">{children}</div>
             </div>
         </div>
     );

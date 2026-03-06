@@ -17,7 +17,10 @@ class RankingController
      */
     public function index(): Response
     {
-        return Inertia::render('Admin/Rankings/Index');
+        return Inertia::render('Admin/Rankings/Index', [
+            'teamRankings' => $this->teams(),
+            'userRankings' => $this->users(),
+        ]);
     }
 
     /**

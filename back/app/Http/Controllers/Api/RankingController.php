@@ -15,10 +15,22 @@ class RankingController
     {
         $rankings = User::where('role', 'user')
             ->orderBy('points', 'desc')
-            ->select('id', 'prenom', 'nom', 'telephone', 'points')
+            ->select('id', 'prenom', 'nom', 'telephone', 'points', 'avatar_path')
             ->withCount('votesMatch as match_votes')
             ->withCount('votesTournament as tournament_votes')
-            ->paginate(50);
+            ->paginate(50)
+            ->through(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'prenom' => $user->prenom,
+                    'nom' => $user->nom,
+                    'telephone' => $user->telephone,
+                    'points' => $user->points,
+                    'match_votes' => $user->match_votes,
+                    'tournament_votes' => $user->tournament_votes,
+                    'avatar_url' => $user->avatar_url,
+                ];
+            });
 
         return response()->json($rankings);
     }
