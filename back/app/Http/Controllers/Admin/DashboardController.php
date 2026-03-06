@@ -26,6 +26,19 @@ class DashboardController
                 ->orderBy('date_match')
                 ->take(5)
                 ->get()
+                ->map(function ($match) {
+                    return [
+                        ...$match->toArray(),
+                        'team1' => [
+                            ...$match->team1->toArray(),
+                            'logo_url' => $match->team1->logo_url,
+                        ],
+                        'team2' => [
+                            ...$match->team2->toArray(),
+                            'logo_url' => $match->team2->logo_url,
+                        ],
+                    ];
+                })
                 ->toArray(),
         ];
 

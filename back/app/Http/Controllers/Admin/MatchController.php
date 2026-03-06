@@ -21,8 +21,14 @@ class MatchController
             ->map(function ($match) {
                 return [
                     ...$match->toArray(),
-                    'team1' => $match->team1,
-                    'team2' => $match->team2,
+                    'team1' => [
+                        ...$match->team1->toArray(),
+                        'logo_url' => $match->team1->logo_url,
+                    ],
+                    'team2' => [
+                        ...$match->team2->toArray(),
+                        'logo_url' => $match->team2->logo_url,
+                    ],
                     'player_matches_count' => $match->playerMatches->count(),
                 ];
             });
@@ -45,11 +51,21 @@ class MatchController
                 ...$match->toArray(),
                 'team1' => [
                     ...$match->team1->toArray(),
-                    'players' => $match->team1->players->toArray(),
+                    'logo_url' => $match->team1->logo_url,
+                    'players' => $match->team1->players->map(function ($player) {
+                        return [
+                            ...$player->toArray(),
+                        ];
+                    })->toArray(),
                 ],
                 'team2' => [
                     ...$match->team2->toArray(),
-                    'players' => $match->team2->players->toArray(),
+                    'logo_url' => $match->team2->logo_url,
+                    'players' => $match->team2->players->map(function ($player) {
+                        return [
+                            ...$player->toArray(),
+                        ];
+                    })->toArray(),
                 ],
                 'playerMatches' => $match->playerMatches->map(function ($pm) {
                     return [

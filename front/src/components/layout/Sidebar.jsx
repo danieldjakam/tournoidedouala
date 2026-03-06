@@ -9,6 +9,7 @@ import {
   Menu,
   X,
   Shield,
+  User,
 } from "lucide-react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,7 +25,7 @@ const menu = [
 
 export default function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, setIsMobileMenuOpen }) {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, currentUser } = useAuth();
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -144,7 +145,45 @@ export default function Sidebar({ activeTab, setActiveTab, isMobileMenuOpen, set
         </nav>
 
         {/* FOOTER */}
-        <div className="mt-8 pt-6 border-t border-[#023e78]/10">
+        <div className="mt-8 pt-6 border-t border-[#023e78]/10 space-y-3">
+          {/* User Info */}
+          {currentUser && (
+            <div className="flex items-center gap-3 p-3 bg-white/80 rounded-xl border border-[#023e78]/20 mb-3">
+              <div className="w-10 h-10 rounded-full bg-[#023e78]/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                {currentUser.avatar_url ? (
+                  <img
+                    src={currentUser.avatar_url}
+                    alt={currentUser.prenom}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User size={20} className="text-[#023e78]" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-[#023e78] truncate">
+                  {currentUser.prenom} {currentUser.nom}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {currentUser.points || 0} pts
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Profile Button */}
+          <button
+            onClick={() => {
+              setIsOpen(false);
+              navigate("/profile");
+            }}
+            className="w-full flex items-center justify-center gap-2 p-3 bg-white/80 hover:bg-white text-[#023e78] rounded-xl transition border border-[#023e78]/20"
+          >
+            <User size={16} />
+            <span className="text-sm font-medium">Mon Profil</span>
+          </button>
+
+          {/* Logout Button */}
           <button
             onClick={handleLogout}
             disabled={isLoggingOut}

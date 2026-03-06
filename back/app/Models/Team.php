@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
 
 class Team extends Model
@@ -30,11 +31,20 @@ class Team extends Model
     {
         // Prioritize uploaded file (logo_path)
         if ($this->logo_path) {
-            return Storage::disk('public')->url($this->logo_path);
+            // Use asset() helper which respects APP_URL
+            return asset('storage/' . $this->logo_path);
         }
-        
+
         // Fallback to URL stored in logo column
-        return $this->logo ?? 'https://via.placeholder.com/48';
+        if ($this->logo) {
+            // Check if it's already a full URL
+            if (str_starts_with($this->logo, 'http')) {
+                return $this->logo;
+            }
+            return asset('storage/' . $this->logo);
+        }
+
+        return 'https://via.placeholder.com/48';
     }
 
     /**
@@ -43,6 +53,22 @@ class Team extends Model
     public function players(): HasMany
     {
         return $this->hasMany(Player::class);
+    }
+
+    /**
+     * Get the user account associated with this team.
+     */
+    public function user(): HasOne
+    {
+        return $this->hasOne(User::class);
+    }
+
+    /**
+     * Check if team has a user account.
+     */
+    public function hasUserAccount(): bool
+    {
+        return $this->user()->exists();
     }
 
     /**

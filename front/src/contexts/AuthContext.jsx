@@ -55,9 +55,13 @@ export const AuthProvider = ({ children }) => {
       // Si on a un token et un utilisateur, on vérifie que le token est valide
       else if (token && user) {
         try {
-          // Vérification silencieuse du token
-          await userService.fetchCurrentUser();
-          setCurrentUser(user);
+          // Vérification silencieuse du token - fetch fresh data from backend
+          const result = await userService.fetchCurrentUser();
+          if (result.success) {
+            setCurrentUser(result.user);
+          } else {
+            setCurrentUser(user);
+          }
         } catch (error) {
           // Token expiré ou invalide
           clearToken();

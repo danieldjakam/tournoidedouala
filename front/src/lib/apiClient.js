@@ -65,10 +65,14 @@ const request = async (endpoint, options = {}) => {
   const token = getToken();
 
   const headers = {
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
     ...options.headers,
   };
+
+  // Only set Content-Type to JSON if body is a string (not FormData)
+  if (options.body && !(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   // Add JWT token if available
   if (token) {
@@ -138,6 +142,20 @@ export const get = (endpoint, options = {}) => {
  * POST request
  */
 export const post = (endpoint, data, options = {}) => {
+  // Handle FormData (for file uploads)
+  if (data instanceof FormData) {
+    const headers = {
+      ...options.headers,
+      // Don't set Content-Type for FormData, let browser set it with boundary
+    };
+    return request(endpoint, {
+      ...options,
+      method: 'POST',
+      body: data,
+      headers,
+    });
+  }
+  
   return request(endpoint, {
     ...options,
     method: 'POST',

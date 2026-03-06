@@ -253,10 +253,20 @@ const UsersRanking = ({ ranking }) => {
               {/* Joueur */}
               <div className="col-span-7">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-white text-xs sm:text-base ${
-                    badge ? badge.bg : 'bg-gray-300'
-                  }`}>
-                    {user.prenom?.charAt(0) || user.nom?.charAt(0) || '?'}
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 border border-gray-200">
+                    {user.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.prenom}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className={`w-full h-full rounded-full flex items-center justify-center font-bold text-white text-xs sm:text-base ${
+                        badge ? badge.bg : 'bg-gray-300'
+                      }`}>
+                        {user.prenom?.charAt(0) || user.nom?.charAt(0) || '?'}
+                      </div>
+                    )}
                   </div>
                   <div className="min-w-0">
                     <p className="font-bold text-gray-900 text-xs sm:text-sm truncate">

@@ -15,5 +15,8 @@ Route::get('dashboard', function () {
     return redirect()->route('admin.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// Load team routes BEFORE admin routes to avoid conflicts
+require __DIR__.'/team.php';
+
 require __DIR__.'/settings.php';
 require __DIR__.'/admin.php';

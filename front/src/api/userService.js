@@ -40,6 +40,7 @@ const mapUserToFrontend = (backendUser) => {
     countryCode: backendUser.indicatif_pays || '+237',
     role: backendUser.role || 'user',
     points: backendUser.points || 0,
+    avatar_url: backendUser.avatar_url || null,
   };
 };
 

@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { LayoutDashboard, Trophy, Users, Zap, BarChart3, Settings, Moon, Sun, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/use-theme';
@@ -41,6 +41,15 @@ export function AdminSidebar() {
             href: '/admin/point-system',
         },
     ];
+
+    const handleLogout = (e: React.FormEvent) => {
+        e.preventDefault();
+        router.post('/logout', {}, {
+            onSuccess: () => {
+                window.location.href = '/login';
+            }
+        });
+    };
 
     return (
         <aside className="w-64 bg-white dark:bg-slate-900 text-gray-900 dark:text-white min-h-screen flex flex-col border-r border-gray-200 dark:border-slate-700">
@@ -99,8 +108,7 @@ export function AdminSidebar() {
                         </>
                     )}
                 </button>
-                <form method="POST" action="/logout">
-                    <input type="hidden" name="_token" value={document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''} />
+                <form onSubmit={handleLogout}>
                     <button
                         type="submit"
                         className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors text-sm font-medium"

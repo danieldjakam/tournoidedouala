@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import AdminLayout from '@/layouts/admin-layout';
 import { Save, ArrowLeft, Upload, X } from 'lucide-react';
 import { Link } from '@inertiajs/react';
-import { ChangeEvent, useRef } from 'react';
+import { ChangeEvent, useRef, useState } from 'react';
 
 interface TeamFormProps {
     team?: {
@@ -22,6 +23,7 @@ interface TeamFormProps {
 
 export default function TeamForm({ team }: TeamFormProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [createAccount, setCreateAccount] = useState(false);
     const { data, setData, post, put, processing, errors } = useForm({
         nom: team?.nom ?? '',
         code: team?.code ?? '',
@@ -29,6 +31,10 @@ export default function TeamForm({ team }: TeamFormProps) {
         logo_url: team?.logo_url || team?.logo || '',
         description: team?.description ?? '',
         priorite: (team?.priorite ?? 0).toString(),
+        create_account: false,
+        account_email: '',
+        account_telephone: '',
+        account_password: '',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -76,6 +82,14 @@ export default function TeamForm({ team }: TeamFormProps) {
             }
             if (data.logo_url && !data.logo) {
                 formData.append('logo_url', data.logo_url);
+            }
+
+            // Add team account fields if requested
+            if (createAccount) {
+                formData.append('create_account', 'true');
+                formData.append('account_email', data.account_email);
+                formData.append('account_telephone', data.account_telephone);
+                formData.append('account_password', data.account_password);
             }
 
             post('/admin/teams', formData, {
@@ -246,6 +260,84 @@ export default function TeamForm({ team }: TeamFormProps) {
                             <p className="text-sm text-red-500">{errors.description}</p>
                         )}
                     </div>
+
+                    {/* Team Account Creation Section - Only for new teams */}
+                    {!team && (
+                        <div className="border-t pt-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Checkbox
+                                    id="create_account"
+                                    checked={createAccount}
+                                    onCheckedChange={(checked) => {
+                                        setCreateAccount(checked as boolean);
+                                        setData('create_account', checked ? true : false);
+                                    }}
+                                />
+                                <Label htmlFor="create_account" className="font-semibold">
+                                    Créer un compte équipe pour cette équipe
+                                </Label>
+                            </div>
+
+                            {createAccount && (
+                                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-4">
+                                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                                        Un compte équipe permettra aux responsables de l'équipe de se connecter pour gérer les joueurs et les compositions de match.
+                                    </p>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="account_telephone">Téléphone (identifiant de connexion) *</Label>
+                                        <Input
+                                            id="account_telephone"
+                                            type="tel"
+                                            placeholder="+237 600 000 000"
+                                            value={data.account_telephone}
+                                            onChange={(e) => setData('account_telephone', e.target.value)}
+                                            required
+                                        />
+                                        <p className="text-xs text-gray-500">
+                                            Ce numéro servira d'identifiant pour la connexion
+                                        </p>
+                                        {errors.account_telephone && (
+                                            <p className="text-sm text-red-500">{errors.account_telephone}</p>
+                                        )}
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="account_email">Email (optionnel)</Label>
+                                        <Input
+                                            id="account_email"
+                                            type="email"
+                                            placeholder="equipe@example.com"
+                                            value={data.account_email}
+                                            onChange={(e) => setData('account_email', e.target.value)}
+                                        />
+                                        {errors.account_email && (
+                                            <p className="text-sm text-red-500">{errors.account_email}</p>
+                                        )}
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="account_password">Mot de passe *</Label>
+                                        <Input
+                                            id="account_password"
+                                            type="password"
+                                            placeholder="••••••••"
+                                            value={data.account_password}
+                                            onChange={(e) => setData('account_password', e.target.value)}
+                                            required
+                                            minLength={6}
+                                        />
+                                        <p className="text-xs text-gray-500">
+                                            Minimum 6 caractères
+                                        </p>
+                                        {errors.account_password && (
+                                            <p className="text-sm text-red-500">{errors.account_password}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="flex gap-3 pt-4">
                         <Button type="submit" disabled={processing}>

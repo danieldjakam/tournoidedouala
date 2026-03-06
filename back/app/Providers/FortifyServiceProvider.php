@@ -38,6 +38,14 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureActions(): void
     {
+        $authenticator = new \App\Actions\Fortify\AuthenticateUser();
+        Fortify::authenticateUsing([$authenticator, 'authenticate']);
+        
+        Fortify::loginView(fn (Request $request) => Inertia::render('auth/login', [
+            'canResetPassword' => Features::enabled(Features::resetPasswords()),
+            'canRegister' => Features::enabled(Features::registration()),
+            'status' => $request->session()->get('status'),
+        ]));
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
     }
@@ -47,12 +55,6 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureViews(): void
     {
-        Fortify::loginView(fn (Request $request) => Inertia::render('auth/login', [
-            'canResetPassword' => Features::enabled(Features::resetPasswords()),
-            'canRegister' => Features::enabled(Features::registration()),
-            'status' => $request->session()->get('status'),
-        ]));
-
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/reset-password', [
             'email' => $request->email,
             'token' => $request->route('token'),

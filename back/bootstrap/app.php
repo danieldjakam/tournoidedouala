@@ -21,12 +21,14 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            \App\Http\Middleware\RedirectBasedOnRole::class,
         ]);
 
         $middleware->api();
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'team' => \App\Http\Middleware\TeamMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

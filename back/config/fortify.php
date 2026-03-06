@@ -73,7 +73,7 @@ return [
     |
     */
 
-    'home' => '/dashboard',
+    'home' => '/login', // Will be overridden in AuthenticateUser based on role
 
     /*
     |--------------------------------------------------------------------------

@@ -10,19 +10,22 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import AdminLayout from '@/layouts/admin-layout';
-import { Plus, Edit, Trash, Search, Users, Trophy } from 'lucide-react';
+import { Plus, Edit, Trash, Search, Users, Trophy, UserCheck, KeyRound } from 'lucide-react';
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Team {
     id: number;
     nom: string;
     code: string;
-    logo?: string | null;
+    logo_url?: string | null;
     description?: string | null;
     priorite: number;
     players_count?: number;
     matches_count?: number;
+    has_account: boolean;
     created_at: string;
 }
 
@@ -36,6 +39,13 @@ export default function TeamsIndex({ teams, success }: Props) {
     const [searchTerm, setSearchTerm] = useState('');
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [teamToDelete, setTeamToDelete] = useState<number | null>(null);
+    const [accountDialogOpen, setAccountDialogOpen] = useState(false);
+    const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+    const [accountForm, setAccountForm] = useState({
+        email: '',
+        telephone: '',
+        password: '',
+    });
 
     const filteredTeams = teams.filter((team) =>
         team.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -54,6 +64,20 @@ export default function TeamsIndex({ teams, success }: Props) {
         setDeleteDialogOpen(false);
     };
 
+    const handleGenerateAccountClick = (team: Team) => {
+        setSelectedTeam(team);
+        setAccountForm({ email: '', telephone: '', password: '' });
+        setAccountDialogOpen(true);
+    };
+
+    const handleGenerateAccountSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (selectedTeam) {
+            router.post(`/admin/teams/${selectedTeam.id}/generate-account`, accountForm);
+            setAccountDialogOpen(false);
+        }
+    };
+
     return (
         <AdminLayout
             title="Équipes"
@@ -65,6 +89,14 @@ export default function TeamsIndex({ teams, success }: Props) {
                 <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                     <p className="text-green-800 dark:text-green-200 text-sm">
                         {success}
+                    </p>
+                </div>
+            )}
+
+            {flash?.error && (
+                <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <p className="text-red-800 dark:text-red-200 text-sm">
+                        {flash.error}
                     </p>
                 </div>
             )}
@@ -96,6 +128,7 @@ export default function TeamsIndex({ teams, success }: Props) {
                             <TableHead>Priorité</TableHead>
                             <TableHead>Joueurs</TableHead>
                             <TableHead>Matchs</TableHead>
+                            <TableHead>Compte</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -103,7 +136,7 @@ export default function TeamsIndex({ teams, success }: Props) {
                         {filteredTeams.length === 0 ? (
                             <TableRow>
                                 <TableCell
-                                    colSpan={6}
+                                    colSpan={7}
                                     className="text-center py-8 text-gray-500"
                                 >
                                     {searchTerm ? (
@@ -175,6 +208,19 @@ export default function TeamsIndex({ teams, success }: Props) {
                                             {team.matches_count ?? 0}
                                         </div>
                                     </TableCell>
+                                    <TableCell>
+                                        {team.has_account ? (
+                                            <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                                                <UserCheck className="w-4 h-4" />
+                                                <span className="text-sm font-medium">Créé</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+                                                <KeyRound className="w-4 h-4" />
+                                                <span className="text-sm font-medium">À créer</span>
+                                            </div>
+                                        )}
+                                    </TableCell>
                                     <TableCell className="text-right space-x-2">
                                         <Link
                                             href={`/admin/teams/${team.id}/edit`}
@@ -187,6 +233,17 @@ export default function TeamsIndex({ teams, success }: Props) {
                                                 <Edit className="h-4 w-4" />
                                             </Button>
                                         </Link>
+                                        {!team.has_account && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleGenerateAccountClick(team)}
+                                                title="Générer un compte équipe"
+                                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                            >
+                                                <KeyRound className="h-4 w-4" />
+                                            </Button>
+                                        )}
                                         <Button
                                             variant="destructive"
                                             size="sm"
@@ -212,6 +269,79 @@ export default function TeamsIndex({ teams, success }: Props) {
                 confirmText="Supprimer"
                 cancelText="Annuler"
             />
+
+            {/* Dialog for generating team account */}
+            <Dialog open={accountDialogOpen} onOpenChange={setAccountDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Générer un compte équipe</DialogTitle>
+                        <DialogDescription>
+                            Créez un compte pour permettre à l'équipe de se connecter et gérer sa composition.
+                            {selectedTeam && (
+                                <p className="mt-2 font-medium text-blue-600">
+                                    Équipe : {selectedTeam.nom}
+                                </p>
+                            )}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleGenerateAccountSubmit}>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="telephone">Téléphone (identifiant de connexion) *</Label>
+                                <Input
+                                    id="telephone"
+                                    type="tel"
+                                    placeholder="+237 600 000 000"
+                                    value={accountForm.telephone}
+                                    onChange={(e) => setAccountForm({ ...accountForm, telephone: e.target.value })}
+                                    required
+                                />
+                                <p className="text-xs text-gray-500">
+                                    Ce numéro servira d'identifiant pour la connexion
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email (optionnel)</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="equipe@example.com"
+                                    value={accountForm.email}
+                                    onChange={(e) => setAccountForm({ ...accountForm, email: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="password">Mot de passe *</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    value={accountForm.password}
+                                    onChange={(e) => setAccountForm({ ...accountForm, password: e.target.value })}
+                                    required
+                                    minLength={6}
+                                />
+                                <p className="text-xs text-gray-500">
+                                    Minimum 6 caractères
+                                </p>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setAccountDialogOpen(false)}
+                            >
+                                Annuler
+                            </Button>
+                            <Button type="submit">
+                                <KeyRound className="w-4 h-4 mr-2" />
+                                Générer le compte
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </AdminLayout>
     );
 }

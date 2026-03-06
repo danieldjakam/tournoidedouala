@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,6 +18,7 @@ class TeamController
     public function index(): Response
     {
         $teams = Team::query()
+            ->with('user')
             ->withCount(['players', 'matchesAsTeam1', 'matchesAsTeam2'])
             ->orderBy('priorite', 'desc')
             ->orderBy('nom')
@@ -24,7 +27,8 @@ class TeamController
                 return [
                     ...$team->toArray(),
                     'matches_count' => $team->matches_as_team1_count + $team->matches_as_team2_count,
-                    'logo_url' => $team->getLogoUrlAttribute(),
+                    'logo_url' => $team->logo_url,
+                    'has_account' => $team->user !== null,
                 ];
             });
 
@@ -54,6 +58,10 @@ class TeamController
             'logo_url' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'priorite' => 'nullable|numeric|min:0|max:10',
+            'create_account' => 'nullable|boolean',
+            'account_email' => 'nullable|email|required_if:create_account,true|unique:users,email',
+            'account_telephone' => 'nullable|string|max:20|required_if:create_account,true|unique:users,telephone',
+            'account_password' => 'nullable|string|min:6|required_if:create_account,true',
         ]);
 
         $data = [
@@ -71,10 +79,23 @@ class TeamController
             $data['logo'] = $request->logo_url;
         }
 
-        Team::create($data);
+        $team = Team::create($data);
+
+        // Create team account if requested
+        if ($request->input('create_account')) {
+            $user = User::create([
+                'prenom' => $team->nom,
+                'nom' => 'Équipe',
+                'email' => $validated['account_email'],
+                'telephone' => $validated['account_telephone'],
+                'password' => Hash::make($validated['account_password']),
+                'role' => User::ROLE_TEAM,
+                'team_id' => $team->id,
+            ]);
+        }
 
         return redirect()->route('admin.teams.index')
-            ->with('success', 'Équipe créée avec succès');
+            ->with('success', 'Équipe créée avec succès' . (isset($user) ? ' et compte équipe généré' : ''));
     }
 
     /**
@@ -83,7 +104,7 @@ class TeamController
     public function edit(Team $team): Response
     {
         return Inertia::render('Admin/Teams/Edit', [
-            'team' => $team,
+            'team' => $team->load('user'),
         ]);
     }
 
@@ -127,6 +148,46 @@ class TeamController
     }
 
     /**
+     * Update team account credentials.
+     */
+    public function updateAccount(Request $request, Team $team)
+    {
+        if (!$team->user) {
+            return back()->with('error', 'Cette équipe n\'a pas de compte');
+        }
+
+        $validated = $request->validate([
+            'email' => 'nullable|email|max:255|unique:users,email,' . $team->user->id,
+            'telephone' => 'required|string|max:20|unique:users,telephone,' . $team->user->id,
+            'password' => 'nullable|string|min:6|confirmed',
+        ]);
+
+        if (isset($validated['password'])) {
+            $team->user->password = Hash::make($validated['password']);
+        }
+
+        $team->user->email = $validated['email'] ?? null;
+        $team->user->telephone = $validated['telephone'];
+        $team->user->save();
+
+        return back()->with('success', 'Compte équipe mis à jour avec succès');
+    }
+
+    /**
+     * Delete team account.
+     */
+    public function deleteAccount(Team $team)
+    {
+        if (!$team->user) {
+            return back()->with('error', 'Cette équipe n\'a pas de compte');
+        }
+
+        $team->user->delete();
+
+        return back()->with('success', 'Compte équipe supprimé avec succès');
+    }
+
+    /**
      * Remove the specified team from storage.
      */
     public function destroy(Team $team)
@@ -136,7 +197,7 @@ class TeamController
             if ($team->logo_path) {
                 Storage::disk('public')->delete($team->logo_path);
             }
-            
+
             $team->delete();
 
             return redirect()->route('admin.teams.index')
@@ -145,5 +206,33 @@ class TeamController
             return redirect()->route('admin.teams.index')
                 ->with('error', 'Impossible de supprimer cette équipe. Elle est peut-être associée à des matchs ou des joueurs.');
         }
+    }
+
+    /**
+     * Generate team account for existing team.
+     */
+    public function generateAccount(Request $request, Team $team)
+    {
+        if ($team->user) {
+            return back()->with('error', 'Cette équipe a déjà un compte');
+        }
+
+        $validated = $request->validate([
+            'email' => 'required|email|max:255|unique:users,email',
+            'telephone' => 'required|string|max:20|unique:users,telephone',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $user = User::create([
+            'prenom' => $team->nom,
+            'nom' => 'Équipe',
+            'email' => $validated['email'] ?? null,
+            'telephone' => $validated['telephone'],
+            'password' => Hash::make($validated['password']),
+            'role' => User::ROLE_TEAM,
+            'team_id' => $team->id,
+        ]);
+
+        return back()->with('success', 'Compte équipe généré avec succès');
     }
 }
