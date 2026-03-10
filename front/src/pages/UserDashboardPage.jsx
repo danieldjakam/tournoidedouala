@@ -184,7 +184,7 @@ const UserDashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 relative">
       {/* Background decorations */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl"></div>
@@ -443,11 +443,11 @@ const UserDashboardPage = () => {
         {/* Top Pronostiqueurs */}
         <div className="px-4 sm:px-6 lg:px-8 mt-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-blue-900 flex items-center gap-2">
               <Trophy size={20} className="text-[#023e78]" />
               Top Pronostiqueurs
             </h2>
-            <Link to="/leaderboard" className="text-blue-600 text-sm font-medium hover:underline flex items-center gap-1">
+            <Link to="/leaderboard" className="text-white-600 text-sm font-medium hover:underline flex items-center gap-1">
               Voir tout <ChevronRight size={16} />
             </Link>
           </div>
@@ -489,9 +489,9 @@ const UserDashboardPage = () => {
             )}
 
             {currentUserRank <= 3 && currentUserRank > 0 && (
-              <div className="mt-4 bg-gradient-to-r from-[#f71a18] to-[#023e78] p-4 rounded-xl border border-[#f71a18]/20">
-                <p className="text-sm text-red-700 font-medium flex items-center gap-2">
-                  <Star className="text-[#f71a18] fill-[#f71a18]" size={18} />
+              <div className="mt-4 bg-[#fa4946] p-4 rounded-xl border border-[#f71a18]/20">
+                <p className="text-sm text-white-700 font-medium flex items-center gap-2">
+                  <Star className="text-[#023e78] fill-[#023e78]" size={18} />
                   Félicitations ! Vous êtes dans le top 3 !
                 </p>
               </div>

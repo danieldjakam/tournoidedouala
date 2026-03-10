@@ -5,10 +5,10 @@ export default function TopUser({ rank, initial, name, points, isFirst, isCurren
   const getRankStyles = () => {
     if (isFirst) {
       return {
-        container: "bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300",
-        rankBadge: "bg-gradient-to-br from-yellow-400 to-yellow-600 text-white",
-        avatar: "bg-gradient-to-br from-yellow-400 to-orange-500 text-white",
-        icon: <Crown className="text-yellow-500 fill-yellow-500" size={20} />
+        container: "bg-gradient-to-r from-red-50 to-red-50 border-red-300",
+        rankBadge: "bg-gradient-to-br from-red-400 to-red-600 text-white",
+        avatar: "bg-gradient-to-br from-red-400 to-red-500 text-white",
+        icon: <Crown className="text-red-500 fill-red-500" size={20} />
       };
     } else if (rank === 2) {
       return {
@@ -19,10 +19,10 @@ export default function TopUser({ rank, initial, name, points, isFirst, isCurren
       };
     } else if (rank === 3) {
       return {
-        container: "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-300",
-        rankBadge: "bg-gradient-to-br from-orange-400 to-orange-600 text-white",
-        avatar: "bg-gradient-to-br from-orange-400 to-orange-600 text-white",
-        icon: <Medal className="text-orange-500 fill-orange-500" size={18} />
+        container: "bg-gradient-to-r from-blue-50 to-amber-50 border-blue-300",
+        rankBadge: "bg-gradient-to-br from-blue-400 to-blue-600 text-white",
+        avatar: "bg-gradient-to-br from-blue-400 to-blue-600 text-white",
+        icon: <Medal className="text-blue-500 fill-blue-500" size={18} />
       };
     } else {
       return {

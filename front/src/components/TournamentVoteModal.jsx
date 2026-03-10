@@ -139,6 +139,7 @@ export default function TournamentVoteModal({ teams, isOpen, onClose, onVoteSucc
                 return (
                   <div
                     key={team.id}
+                    onClick={() => {if(!existingVote)setSelectedTeam(team.id)}}
                     className={`p-4 rounded-xl transition-all border-2 ${
                       isUserChoice
                         ? 'border-green-500 bg-green-50 ring-2 ring-green-500 ring-offset-2'

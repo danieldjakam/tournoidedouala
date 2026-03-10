@@ -174,7 +174,7 @@ const TeamCard = React.memo(({ team, index, isHovered, onHoverStart, onHoverEnd,
         </div>
 
         {/* Crown for top team */}
-        {index === 0 && (
+        {/* {index === 0 && (
           <motion.div 
             initial={{ y: -20, opacity: 0 }}
             animate={inView ? { y: 0, opacity: 1 } : {}}
@@ -192,7 +192,7 @@ const TeamCard = React.memo(({ team, index, isHovered, onHoverStart, onHoverEnd,
               </motion.div>
             </div>
           </motion.div>
-        )}
+        )} */}
       </div>
 
       {/* Team name */}
@@ -353,7 +353,7 @@ const HomePage = () => {
                 transition={{ duration: 2, repeat: Infinity }}
               >
                 TOURNOI DE<br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-blue via-white to-primary-blue animate-gradient">
+                <span className="text-transparent bg-clip-text bg-white animate-gradient">
                   DOUALA 2026
                 </span>
               </motion.h1>

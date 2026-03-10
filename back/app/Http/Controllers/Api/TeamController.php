@@ -16,6 +16,7 @@ class TeamController
         $teams = Team::all()->map(function ($team) {
             return [
                 'id' => $team->id,
+                'name' => $team->nom,
                 'nom' => $team->nom,
                 'code' => $team->code,
                 'logo' => $team->logo,
