@@ -28,59 +28,59 @@ const MatchManagement = ({ adminId }) => {
     setMatches(matchService.getMatches());
   };
 
-  const handleAddMatch = (e) => {
-    e.preventDefault();
+  // const handleAddMatch = (e) => {
+  //   e.preventDefault();
 
-    if (!formData.team_a_id || !formData.team_b_id || !formData.kickoff_time) {
-      toast({
-        title: "Champs requis",
-        description: "Veuillez remplir tous les champs",
-        variant: "destructive"
-      });
-      return;
-    }
+  //   if (!formData.team_a_id || !formData.team_b_id || !formData.kickoff_time) {
+  //     toast({
+  //       title: "Champs requis",
+  //       description: "Veuillez remplir tous les champs",
+  //       variant: "destructive"
+  //     });
+  //     return;
+  //   }
 
-    const newMatch = matchService.addMatch(formData);
-    adminService.logAuditAction(adminId, 'ADD_MATCH', { matchId: newMatch.id });
+  //   const newMatch = matchService.addMatch(formData);
+  //   adminService.logAuditAction(adminId, 'ADD_MATCH', { matchId: newMatch.id });
     
-    toast({
-      title: "Match ajouté",
-      description: "Le match a été créé avec succès",
-    });
+  //   toast({
+  //     title: "Match ajouté",
+  //     description: "Le match a été créé avec succès",
+  //   });
 
-    setFormData({
-      team_a_id: '',
-      team_b_id: '',
-      kickoff_time: '',
-      match_duration_minutes: 90
-    });
-    loadData();
-  };
+  //   setFormData({
+  //     team_a_id: '',
+  //     team_b_id: '',
+  //     kickoff_time: '',
+  //     match_duration_minutes: 90
+  //   });
+  //   loadData();
+  // };
 
-  const handleUpdateScore = (matchId) => {
-    const scores = scoreData[matchId];
-    if (!scores || scores.team_a === undefined || scores.team_b === undefined) {
-      toast({
-        title: "Scores requis",
-        description: "Veuillez entrer les deux scores",
-        variant: "destructive"
-      });
-      return;
-    }
+  // const handleUpdateScore = (matchId) => {
+  //   const scores = scoreData[matchId];
+  //   if (!scores || scores.team_a === undefined || scores.team_b === undefined) {
+  //     toast({
+  //       title: "Scores requis",
+  //       description: "Veuillez entrer les deux scores",
+  //       variant: "destructive"
+  //     });
+  //     return;
+  //   }
 
-    matchService.updateMatchScore(matchId, scores.team_a, scores.team_b);
-    adminService.logAuditAction(adminId, 'UPDATE_SCORE', { 
-      matchId, 
-      score: `${scores.team_a}-${scores.team_b}` 
-    });
+  //   matchService.updateMatchScore(matchId, scores.team_a, scores.team_b);
+  //   adminService.logAuditAction(adminId, 'UPDATE_SCORE', { 
+  //     matchId, 
+  //     score: `${scores.team_a}-${scores.team_b}` 
+  //   });
 
-    toast({
-      title: "Score enregistré",
-      description: "Le score a été validé avec succès",
-    });
+  //   toast({
+  //     title: "Score enregistré",
+  //     description: "Le score a été validé avec succès",
+  //   });
 
-    loadData();
-  };
+  //   loadData();
+  // };
 
   const handleScoreChange = (matchId, team, value) => {
     setScoreData({
@@ -161,7 +161,7 @@ const MatchManagement = ({ adminId }) => {
         <h3 className="text-xl font-bold text-white mb-4">Matchs existants</h3>
         <div className="space-y-4">
           {matches.map(match => {
-            const score = matchService.getMatchScore(match.id);
+            // const score = matchService.getMatchScore(match.id);
             return (
               <div key={match.id} className="bg-gray-700 p-4 rounded-lg">
                 <div className="grid grid-cols-3 gap-4 items-center mb-4">

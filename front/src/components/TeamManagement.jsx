@@ -51,53 +51,53 @@ const TeamManagement = ({ adminId }) => {
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
 
-    if (!formData.name) {
-      toast({
-        title: "Nom requis",
-        description: "Veuillez entrer le nom de l'équipe",
-        variant: "destructive"
-      });
-      return;
-    }
+  //   if (!formData.name) {
+  //     toast({
+  //       title: "Nom requis",
+  //       description: "Veuillez entrer le nom de l'équipe",
+  //       variant: "destructive"
+  //     });
+  //     return;
+  //   }
 
-    if (editingTeam) {
-      matchService.updateTeam(editingTeam.id, formData);
-      adminService.logAuditAction(adminId, 'UPDATE_TEAM', { teamId: editingTeam.id, name: formData.name });
-      toast({
-        title: "Équipe mise à jour",
-        description: `${formData.name} a été modifiée avec succès`,
-      });
-    } else {
-      const newTeam = matchService.addTeam({
-        ...formData,
-        logo_url: formData.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${formData.name}&backgroundColor=1E40AF&textColor=ffffff`
-      });
-      adminService.logAuditAction(adminId, 'ADD_TEAM', { teamId: newTeam.id, name: formData.name });
-      toast({
-        title: "Équipe ajoutée",
-        description: `${formData.name} a été créée avec succès`,
-      });
-    }
+  //   if (editingTeam) {
+  //     matchService.updateTeam(editingTeam.id, formData);
+  //     adminService.logAuditAction(adminId, 'UPDATE_TEAM', { teamId: editingTeam.id, name: formData.name });
+  //     toast({
+  //       title: "Équipe mise à jour",
+  //       description: `${formData.name} a été modifiée avec succès`,
+  //     });
+  //   } else {
+  //     const newTeam = matchService.addTeam({
+  //       ...formData,
+  //       logo_url: formData.logo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${formData.name}&backgroundColor=1E40AF&textColor=ffffff`
+  //     });
+  //     adminService.logAuditAction(adminId, 'ADD_TEAM', { teamId: newTeam.id, name: formData.name });
+  //     toast({
+  //       title: "Équipe ajoutée",
+  //       description: `${formData.name} a été créée avec succès`,
+  //     });
+  //   }
 
-    setFormData({ name: '', logo_file: null, logo_url: '', players_json: [] });
-    setPreviewUrl('');
-    setEditingTeam(null);
-    loadTeams();
-  };
+  //   setFormData({ name: '', logo_file: null, logo_url: '', players_json: [] });
+  //   setPreviewUrl('');
+  //   setEditingTeam(null);
+  //   loadTeams();
+  // };
 
-  const handleEdit = (team) => {
-    setEditingTeam(team);
-    setFormData({
-      name: team.name,
-      logo_file: null,
-      logo_url: team.logo_url,
-      players_json: team.players_json || []
-    });
-    setPreviewUrl(team.logo_url);
-  };
+  // const handleEdit = (team) => {
+  //   setEditingTeam(team);
+  //   setFormData({
+  //     name: team.name,
+  //     logo_file: null,
+  //     logo_url: team.logo_url,
+  //     players_json: team.players_json || []
+  //   });
+  //   setPreviewUrl(team.logo_url);
+  // };
 
   const handleAddPlayer = () => {
     if (newPlayer.trim()) {

@@ -1,0 +1,9 @@
+## Pages
+- [Admin Dashboard - Tournoi de Douala 2026](/admindashboard): Tableau de bord administrateur du tournoi
+- [Connexion - Tournoi de Douala 2026](/login): No description available
+- [Connexion Admin - Tournoi Football 2026](/adminlogin): Espace administrateur du tournoi de football 2026
+- [Équipes - Tournoi de Douala 2026](/equipes): Découvrez toutes les équipes participantes au Tournoi de Douala 2026
+- [Inscription - Tournoi de Douala 2026](/userregistration): Inscrivez-vous au tournoi de football 2026 et commencez à faire vos prédictions
+- [Paramètres - Tournoi 2026](/usersettings): No description available
+- [Réinitialisation - Tournoi de Douala 2026](/forgotpassword): No description available
+- [Tournoi de Douala 2026 | Pronostics & Classements](/home): Participez au tournoi de football 2026 à Douala. Faites vos pronostics, gagnez des points et suivez le classement en direct.

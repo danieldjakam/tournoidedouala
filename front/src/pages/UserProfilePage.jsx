@@ -360,7 +360,7 @@ const UserProfilePage = () => {
                       />
                     </div>
                   </div>
-                  <label className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-[#f71a18] hover:bg-[#f71a18]/90 text-white rounded-full flex items-center justify-center shadow-lg transition-colors border-2 border-white cursor-pointer">
+                  {/* <label className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-[#f71a18] hover:bg-[#f71a18]/90 text-white rounded-full flex items-center justify-center shadow-lg transition-colors border-2 border-white cursor-pointer">
                     <Camera size={14} className="sm:w-4 md:w-5" />
                     <input
                       type="file"
@@ -369,7 +369,7 @@ const UserProfilePage = () => {
                       className="hidden"
                       disabled={loading}
                     />
-                  </label>
+                  </label> */}
                 </div>
                 <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white mt-2 sm:mt-3 line-clamp-1 px-2 my-2">
                   {currentUser.firstname} {currentUser.name}

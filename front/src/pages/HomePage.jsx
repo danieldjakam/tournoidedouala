@@ -318,17 +318,17 @@ const HomePage = () => {
           />
           
           {/* Content */}
-          <div className="relative z-10 container mx-auto px-4 text-center">
+          <div className="relative z-10 container mx-auto px-4 text-center pt-12">
             <motion.div 
-              initial={{ opacity: 0, y: 30 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              transition={{ duration: 0.8 }}
+              // initial={{ opacity: 0, y: 30 }} 
+              // animate={{ opacity: 1, y: 0 }} 
+              // transition={{ duration: 0.8 }}
             >
               {/* Animated Logo */}
               <motion.div 
                 animate={{ 
-                  rotate: [0, 10, -10, 0],
-                  scale: [1, 1.1, 1]
+                  // rotate: [0, 10, -10, 0],
+                  // scale: [1, 1.1, 1]
                 }}
                 transition={{ duration: 2, delay: 1, repeat: Infinity }}
                 className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-white p-2 mx-auto mb-8 shadow-2xl border-4 border-primary-blue/50 relative"
@@ -359,18 +359,18 @@ const HomePage = () => {
               </motion.h1>
               
               <motion.p 
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
+                // initial={{ opacity: 0, scale: 0.5 }}
+                // animate={{ opacity: 1, scale: 1 }}
+                // transition={{ delay: 0.3, duration: 0.5 }}
                 className="text-2xl md:text-3xl text-gray-200 font-semibold mb-4"
               >
                 La Compétition Ultime
               </motion.p>
               
               <motion.p 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
+                // initial={{ opacity: 0, y: 20 }}
+                // animate={{ opacity: 1, y: 0 }}
+                // transition={{ delay: 0.5 }}
                 className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed"
               >
                 Rejoignez la passion du football camerounais. Faites vos pronostics, suivez les scores en direct et supportez votre équipe favorite.
@@ -379,16 +379,16 @@ const HomePage = () => {
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                 <Link to="/register">
                   <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    // whileHover={{ scale: 1.05 }}
+                    // whileTap={{ scale: 0.95 }}
                   >
                     <Button className="bg-accent-red hover:bg-red-700 text-white px-10 py-8 text-xl font-bold rounded-lg shadow-xl hover:shadow-2xl transition-all relative overflow-hidden group">
                       <span className="relative z-10">REJOINDRE LE TOURNOI</span>
                       <motion.div 
                         className="absolute inset-0 bg-gradient-to-r from-red-600 to-red-800"
-                        animate={{ x: ['0%', '100%'] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        style={{ opacity: 0.3 }}
+                        // animate={{ x: ['0%', '100%'] }}
+                        // transition={{ duration: 2, repeat: Infinity }}
+                        // style={{ opacity: 0.3 }}
                       />
                     </Button>
                   </motion.div>
@@ -396,8 +396,8 @@ const HomePage = () => {
                 
                 <Link to="/dashboard">
                   <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    // whileHover={{ scale: 1.05 }}
+                    // whileTap={{ scale: 0.95 }}
                   >
                     <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-primary-blue px-10 py-8 text-xl font-bold rounded-lg transition-all bg-transparent group">
                       VOIR LES RÉSULTATS
@@ -410,16 +410,13 @@ const HomePage = () => {
 
             {/* Stats with Counters */}
             <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
               className="m-10 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
             >
               {stats.map((stat, index) => {
                 const hasLink = !!stat.href;
                 const cardContent = (
                   <motion.div
-                    whileHover={{ scale: 1.05, y: -5 }}
+                    // whileHover={{ scale: 1.05, y: -5 }}
                     className={`bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 hover:bg-white/15 transition-all relative overflow-hidden group ${
                       hasLink ? 'cursor-pointer' : ''
                     }`}
